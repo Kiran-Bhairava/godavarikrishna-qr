@@ -1,0 +1,1387 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hierarchy Manager</title>
+    <link rel="icon" type="image/png" href="static/social/gk.png" />
+
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --primary-hover: #2563eb;
+        --danger: #ef4444;
+        --success: #10b981;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --text-light: #64748b;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .header {
+        background: var(--card);
+        border-bottom: 1px solid var(--border);
+        padding: 20px 0;
+        margin-bottom: 32px;
+      }
+
+      .header-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .nav-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        border-bottom: 2px solid var(--border);
+      }
+
+      .nav-tab {
+        padding: 12px 24px;
+        background: none;
+        border: none;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-light);
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+      }
+
+      .nav-tab:hover {
+        color: var(--primary);
+      }
+      .nav-tab.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+      }
+
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+
+      .btn {
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: none;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-hover);
+      }
+
+      .btn-outline {
+        background: white;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+
+      .btn-outline:hover {
+        background: var(--bg);
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .card-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        text-align: left;
+        padding: 16px 24px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-light);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: var(--bg);
+      }
+
+      td {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        font-size: 14px;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .badge-active {
+        background: #d1fae5;
+        color: var(--success);
+      }
+
+      .badge-inactive {
+        background: #fee2e2;
+        color: var(--danger);
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+
+      .icon-btn {
+        background: none;
+        border: none;
+        padding: 6px;
+        cursor: pointer;
+        color: #64748b;
+        border-radius: 6px;
+        transition: all 0.15s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .icon-btn svg {
+        width: 18px;
+        height: 18px;
+        stroke-width: 1.8;
+      }
+
+      .icon-btn:hover {
+        background: var(--bg);
+      }
+
+      .icon-btn.delete:hover {
+        color: var(--danger);
+        background: #fee2e2;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .modal.show {
+        display: flex;
+      }
+
+      .modal-content {
+        background: var(--card);
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+
+      .modal-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--text-light);
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+      }
+
+      .close-btn:hover {
+        background: var(--bg);
+      }
+
+      .modal-body {
+        padding: 24px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 8px;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .modal-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+      }
+
+      .error-message {
+        background: #fee2e2;
+        color: var(--danger);
+        padding: 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 16px;
+        display: none;
+      }
+
+      .error-message.show {
+        display: block;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-light);
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-light);
+      }
+
+      .spinner {
+        border: 3px solid var(--border);
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Inactive row styling */
+      .row-inactive {
+        opacity: 0.7;
+        background-color: #f9fafb;
+      }
+
+      .row-inactive td {
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Header -->
+    <div class="header">
+      <div class="header-content">
+        <div class="logo">Hierarchy Manager</div>
+        <div class="header-actions">
+          <button
+            class="btn btn-outline btn-sm"
+            onclick="window.location.href = '/home'"
+          >
+            ← Home
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="logout()">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Navigation Tabs -->
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchTab('regions', this)">
+          Regions
+        </button>
+        <button class="nav-tab" onclick="switchTab('clusters', this)">
+          Clusters
+        </button>
+        <button class="nav-tab" onclick="switchTab('branches', this)">
+          Branches
+        </button>
+      </div>
+
+      <!-- REGIONS TAB -->
+      <div class="tab-content active" id="regions-tab">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Regions</h2>
+            <button class="btn btn-primary" onclick="openRegionModal()">
+              + Add Region
+            </button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="regionsTable">
+                <tr>
+                  <td colspan="5" class="loading">
+                    <div class="spinner"></div>
+                    Loading regions...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLUSTERS TAB -->
+      <div class="tab-content" id="clusters-tab">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Clusters</h2>
+            <button class="btn btn-primary" onclick="openClusterModal()">
+              + Add Cluster
+            </button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Region</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="clustersTable">
+                <tr>
+                  <td colspan="5" class="loading">
+                    <div class="spinner"></div>
+                    Loading clusters...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- BRANCHES TAB -->
+      <div class="tab-content" id="branches-tab">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Branches</h2>
+            <button class="btn btn-primary" onclick="openBranchModal()">
+              + Add Branch
+            </button>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Cluster</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="branchesTable">
+                <tr>
+                  <td colspan="6" class="loading">
+                    <div class="spinner"></div>
+                    Loading branches...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REGION MODAL -->
+    <div class="modal" id="regionModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="regionModalTitle">Add Region</h3>
+          <button class="close-btn" onclick="closeRegionModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="error-message" id="regionError"></div>
+          <form id="regionForm">
+            <div class="form-group">
+              <label>Region Name *</label>
+              <input
+                type="text"
+                id="regionName"
+                placeholder="e.g., Andhra Pradesh"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Region Code *</label>
+              <input
+                type="text"
+                id="regionCode"
+                placeholder="e.g., AP"
+                required
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeRegionModal()">
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            id="saveRegionBtn"
+            onclick="saveRegion()"
+          >
+            Save Region
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLUSTER MODAL -->
+    <div class="modal" id="clusterModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="clusterModalTitle">Add Cluster</h3>
+          <button class="close-btn" onclick="closeClusterModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="error-message" id="clusterError"></div>
+          <form id="clusterForm">
+            <div class="form-group">
+              <label>Cluster Name *</label>
+              <input
+                type="text"
+                id="clusterName"
+                placeholder="e.g., Vijayawada"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Cluster Code *</label>
+              <input
+                type="text"
+                id="clusterCode"
+                placeholder="e.g., VJY"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Region *</label>
+              <select id="clusterRegion" required>
+                <option value="">Select Region</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeClusterModal()">
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            id="saveClusterBtn"
+            onclick="saveCluster()"
+          >
+            Save Cluster
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BRANCH MODAL -->
+    <div class="modal" id="branchModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title" id="branchModalTitle">Add Branch</h3>
+          <button class="close-btn" onclick="closeBranchModal()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="error-message" id="branchError"></div>
+          <form id="branchForm">
+            <div class="form-group">
+              <label>Branch Name *</label>
+              <input
+                type="text"
+                id="branchName"
+                placeholder="e.g., Main Branch"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Branch Code *</label>
+              <input
+                type="text"
+                id="branchCode"
+                placeholder="e.g., MB01"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Cluster *</label>
+              <select id="branchCluster" required>
+                <option value="">Select Cluster</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Location (Optional)</label>
+              <textarea
+                id="branchLocation"
+                placeholder="Branch address"
+              ></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeBranchModal()">
+            Cancel
+          </button>
+          <button
+            class="btn btn-primary"
+            id="saveBranchBtn"
+            onclick="saveBranch()"
+          >
+            Save Branch
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // API Configuration
+      const API_BASE = window.location.origin;
+      let currentEditId = null;
+      let regionsData = [];
+      let clustersData = [];
+      let branchesData = [];
+
+      // Auth Headers
+      function getHeaders() {
+        const token = localStorage.getItem("token");
+        return {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        };
+      }
+
+      // Check Auth
+      function checkAuth() {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          window.location.href = "/";
+          return false;
+        }
+        return true;
+      }
+
+      // Logout
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "/";
+      }
+
+      // Tab Switching
+      function switchTab(tab, el) {
+        document
+          .querySelectorAll(".nav-tab")
+          .forEach((btn) => btn.classList.remove("active"));
+        el.classList.add("active");
+
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((content) => content.classList.remove("active"));
+        document.getElementById(`${tab}-tab`).classList.add("active");
+
+        if (tab === "regions") loadRegions();
+        else if (tab === "clusters") loadClusters();
+        else if (tab === "branches") loadBranches();
+      }
+
+      // ============================================
+      // REGIONS
+      // ============================================
+
+      async function loadRegions() {
+        try {
+          const res = await fetch(`${API_BASE}/api/regions`, {
+            headers: getHeaders(),
+          });
+          if (!res.ok) throw new Error("Failed to load regions");
+
+          regionsData = await res.json();
+          renderRegions(regionsData);
+        } catch (err) {
+          showError("regionsTable", "Failed to load regions");
+        }
+      }
+
+      function renderRegions(regions) {
+        const tbody = document.getElementById("regionsTable");
+
+        if (regions.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No regions yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = regions
+          .map((r) => {
+            const rowClass = r.is_active ? "" : "row-inactive";
+            return `
+        <tr class="${rowClass}">
+            <td>${r.name}</td>
+            <td><strong>${r.code}</strong></td>
+            <td><span class="badge ${r.is_active ? "badge-active" : "badge-inactive"}">${r.is_active ? "Active" : "Inactive"}</span></td>
+            <td>${new Date(r.created_at).toLocaleDateString()}</td>
+            <td>
+                <div class="actions">
+                    <!-- Edit -->
+                    <button class="icon-btn" title="Edit Region" onclick="editRegion(${r.id})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Activate / Deactivate -->
+                    <button class="icon-btn" 
+                        title="${r.is_active ? "Deactivate Region" : "Activate Region"}"
+                        onclick="toggleRegionStatus(${r.id}, ${r.is_active})">
+                        ${
+                          r.is_active
+                            ? `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="6" y="4" width="4" height="16"/>
+                            <rect x="14" y="4" width="4" height="16"/>
+                        </svg>`
+                            : `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>`
+                        }
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+          })
+          .join("");
+      }
+
+      function openRegionModal(editId = null) {
+        currentEditId = editId;
+        const modal = document.getElementById("regionModal");
+        const title = document.getElementById("regionModalTitle");
+
+        if (editId) {
+          const region = regionsData.find((r) => r.id === editId);
+          title.textContent = "Edit Region";
+          document.getElementById("regionName").value = region.name;
+          document.getElementById("regionCode").value = region.code;
+        } else {
+          title.textContent = "Add Region";
+          document.getElementById("regionForm").reset();
+        }
+
+        modal.classList.add("show");
+      }
+
+      function closeRegionModal() {
+        document.getElementById("regionModal").classList.remove("show");
+        document.getElementById("regionError").classList.remove("show");
+        currentEditId = null;
+      }
+
+      async function saveRegion() {
+        const name = document.getElementById("regionName").value.trim();
+        const code = document
+          .getElementById("regionCode")
+          .value.trim()
+          .toUpperCase();
+
+        if (!name || !code) {
+          showModalError("regionError", "Please fill in all required fields");
+          return;
+        }
+
+        try {
+          let res;
+          if (currentEditId) {
+            res = await fetch(`${API_BASE}/api/regions/${currentEditId}`, {
+              method: "PATCH",
+              headers: getHeaders(),
+              body: JSON.stringify({ name, code }),
+            });
+          } else {
+            res = await fetch(`${API_BASE}/api/regions`, {
+              method: "POST",
+              headers: getHeaders(),
+              body: JSON.stringify({ name, code }),
+            });
+          }
+
+          if (!res.ok) {
+            let msg = "Failed to save region";
+            try {
+              const data = await res.json();
+              if (data && data.detail) {
+                msg = data.detail;
+              }
+            } catch {}
+            showModalError("regionError", msg);
+            return;
+          }
+
+          closeRegionModal();
+          loadRegions();
+        } catch (err) {
+          showModalError("regionError", "Failed to save region");
+        }
+      }
+
+      function editRegion(id) {
+        openRegionModal(id);
+      }
+
+      async function toggleRegionStatus(id, currentStatus) {
+        try {
+          const res = await fetch(`${API_BASE}/api/regions/${id}`, {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify({ is_active: !currentStatus }),
+          });
+
+          if (!res.ok) throw new Error("Failed");
+          loadRegions();
+        } catch (err) {
+          alert("Failed to update status");
+        }
+      }
+
+      // ============================================
+      // CLUSTERS
+      // ============================================
+
+      async function loadClusters() {
+        try {
+          const res = await fetch(`${API_BASE}/api/clusters`, {
+            headers: getHeaders(),
+          });
+          if (!res.ok) throw new Error("Failed to load clusters");
+
+          clustersData = await res.json();
+          renderClusters(clustersData);
+        } catch (err) {
+          showError("clustersTable", "Failed to load clusters");
+        }
+      }
+
+      function renderClusters(clusters) {
+        const tbody = document.getElementById("clustersTable");
+
+        if (clusters.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No clusters yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = clusters
+          .map((c) => {
+            const region = regionsData.find((r) => r.id === c.region_id);
+            const rowClass = c.is_active ? "" : "row-inactive";
+            return `
+        <tr class="${rowClass}">
+            <td>${c.name}</td>
+            <td><strong>${c.code}</strong></td>
+            <td>${region ? region.name : "—"}</td>
+            <td><span class="badge ${c.is_active ? "badge-active" : "badge-inactive"}">${c.is_active ? "Active" : "Inactive"}</span></td>
+            <td>
+                <div class="actions">
+                    <!-- Edit -->
+                    <button class="icon-btn" title="Edit Cluster" onclick="editCluster(${c.id})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Activate / Deactivate -->
+                    <button class="icon-btn" 
+                        title="${c.is_active ? "Deactivate Cluster" : "Activate Cluster"}"
+                        onclick="toggleClusterStatus(${c.id}, ${c.is_active})">
+                        ${
+                          c.is_active
+                            ? `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="6" y="4" width="4" height="16"/>
+                            <rect x="14" y="4" width="4" height="16"/>
+                        </svg>`
+                            : `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>`
+                        }
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+          })
+          .join("");
+      }
+
+      async function openClusterModal(editId = null) {
+        currentEditId = editId;
+        const modal = document.getElementById("clusterModal");
+        const title = document.getElementById("clusterModalTitle");
+
+        if (editId) {
+          // EDIT MODE: Show only name and code (no region dropdown)
+          const cluster = clustersData.find((c) => c.id === editId);
+          title.textContent = "Edit Cluster";
+          document.getElementById("clusterName").value = cluster.name;
+          document.getElementById("clusterCode").value = cluster.code;
+
+          // Hide region field for editing
+          const regionField = document.getElementById("clusterRegion");
+          if (regionField) {
+            regionField.style.display = "none";
+            regionField.previousElementSibling.style.display = "none";
+          }
+        } else {
+          // ADD MODE: Show all fields including region
+          title.textContent = "Add Cluster";
+          document.getElementById("clusterForm").reset();
+
+          // Show region field and populate dropdown
+          const regionField = document.getElementById("clusterRegion");
+          if (regionField) {
+            regionField.style.display = "block";
+            regionField.previousElementSibling.style.display = "block";
+
+            // Load regions for dropdown if not loaded
+            if (regionsData.length === 0) {
+              await loadRegions();
+            }
+
+            regionField.innerHTML =
+              '<option value="">Select Region</option>' +
+              regionsData
+                .filter((r) => r.is_active)
+                .map((r) => `<option value="${r.id}">${r.name}</option>`)
+                .join("");
+          }
+        }
+
+        modal.classList.add("show");
+      }
+
+      function closeClusterModal() {
+        document.getElementById("clusterModal").classList.remove("show");
+        document.getElementById("clusterError").classList.remove("show");
+        currentEditId = null;
+
+        // Reset region field visibility
+        const regionField = document.getElementById("clusterRegion");
+        if (regionField) {
+          regionField.style.display = "block";
+          regionField.previousElementSibling.style.display = "block";
+        }
+      }
+
+      async function saveCluster() {
+        const name = document.getElementById("clusterName").value.trim();
+        const code = document
+          .getElementById("clusterCode")
+          .value.trim()
+          .toUpperCase();
+
+        if (!name || !code) {
+          showModalError("clusterError", "Please fill in all required fields");
+          return;
+        }
+
+        try {
+          let res;
+          if (currentEditId) {
+            res = await fetch(`${API_BASE}/api/clusters/${currentEditId}`, {
+              method: "PATCH",
+              headers: getHeaders(),
+              body: JSON.stringify({ name, code }),
+            });
+          } else {
+            // ADD: Include region_id
+            const region_id = parseInt(
+              document.getElementById("clusterRegion").value,
+            );
+            if (!region_id) {
+              showModalError("clusterError", "Please select a region");
+              return;
+            }
+            res = await fetch(`${API_BASE}/api/clusters`, {
+              method: "POST",
+              headers: getHeaders(),
+              body: JSON.stringify({ name, code, region_id }),
+            });
+          }
+
+          if (!res.ok) {
+            let msg = "Failed to save cluster";
+            try {
+              const data = await res.json();
+              if (data && data.detail) {
+                msg = data.detail;
+              }
+            } catch {}
+            showModalError("clusterError", msg);
+            return;
+          }
+
+          closeClusterModal();
+          loadClusters();
+        } catch (err) {
+          showModalError("clusterError", "Failed to save cluster");
+        }
+      }
+
+      function editCluster(id) {
+        openClusterModal(id);
+      }
+
+      async function toggleClusterStatus(id, currentStatus) {
+        try {
+          const res = await fetch(`${API_BASE}/api/clusters/${id}`, {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify({ is_active: !currentStatus }),
+          });
+
+          if (!res.ok) throw new Error("Failed");
+          loadClusters();
+        } catch (err) {
+          alert("Failed to update status");
+        }
+      }
+
+      // ============================================
+      // BRANCHES
+      // ============================================
+
+      async function loadBranches() {
+        try {
+          const res = await fetch(`${API_BASE}/api/branches`, {
+            headers: getHeaders(),
+          });
+          if (!res.ok) throw new Error("Failed to load branches");
+
+          branchesData = await res.json();
+          renderBranches(branchesData);
+        } catch (err) {
+          showError("branchesTable", "Failed to load branches");
+        }
+      }
+
+      function renderBranches(branches) {
+        const tbody = document.getElementById("branchesTable");
+
+        if (branches.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No branches yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = branches
+          .map((b) => {
+            const cluster = clustersData.find((c) => c.id === b.cluster_id);
+            const rowClass = b.is_active ? "" : "row-inactive";
+            return `
+        <tr class="${rowClass}">
+            <td>${b.name}</td>
+            <td><strong>${b.code}</strong></td>
+            <td>${cluster ? cluster.name : "—"}</td>
+            <td>${b.location || "—"}</td>
+            <td><span class="badge ${b.is_active ? "badge-active" : "badge-inactive"}">${b.is_active ? "Active" : "Inactive"}</span></td>
+            <td>
+                <div class="actions">
+                    <!-- Edit -->
+                    <button class="icon-btn" title="Edit Branch" onclick="editBranch(${b.id})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Activate / Deactivate -->
+                    <button class="icon-btn" 
+                        title="${b.is_active ? "Deactivate Branch" : "Activate Branch"}"
+                        onclick="toggleBranchStatus(${b.id}, ${b.is_active})">
+                        ${
+                          b.is_active
+                            ? `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="6" y="4" width="4" height="16"/>
+                            <rect x="14" y="4" width="4" height="16"/>
+                        </svg>`
+                            : `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>`
+                        }
+                    </button>
+
+                    <!-- Delete -->
+                    <button class="icon-btn delete" title="Delete Branch" onclick="deleteBranch(${b.id})">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="3 6 5 6 21 6"/>
+                            <path d="M19 6l-2 14H7L5 6"/>
+                            <path d="M10 11v6M14 11v6"/>
+                            <path d="M9 6V4h6v2"/>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+          })
+          .join("");
+      }
+
+      async function openBranchModal(editId = null) {
+        currentEditId = editId;
+        const modal = document.getElementById("branchModal");
+        const title = document.getElementById("branchModalTitle");
+
+        if (editId) {
+          // EDIT MODE: Show only name, code, location (no cluster dropdown)
+          const branch = branchesData.find((b) => b.id === editId);
+          title.textContent = "Edit Branch";
+          document.getElementById("branchName").value = branch.name;
+          document.getElementById("branchCode").value = branch.code;
+          document.getElementById("branchLocation").value =
+            branch.location || "";
+
+          // Hide cluster field for editing
+          const clusterField = document.getElementById("branchCluster");
+          if (clusterField) {
+            clusterField.style.display = "none";
+            clusterField.previousElementSibling.style.display = "none";
+          }
+        } else {
+          // ADD MODE: Show all fields including cluster
+          title.textContent = "Add Branch";
+          document.getElementById("branchForm").reset();
+
+          // Show cluster field and populate dropdown
+          const clusterField = document.getElementById("branchCluster");
+          if (clusterField) {
+            clusterField.style.display = "block";
+            clusterField.previousElementSibling.style.display = "block";
+
+            // Load clusters for dropdown if not loaded
+            if (clustersData.length === 0) {
+              await loadClusters();
+            }
+
+            clusterField.innerHTML =
+              '<option value="">Select Cluster</option>' +
+              clustersData
+                .filter((c) => c.is_active)
+                .map((c) => {
+                  const region = regionsData.find((r) => r.id === c.region_id);
+                  return `<option value="${c.id}">${c.name} - ${region ? region.name : "N/A"}</option>`;
+                })
+                .join("");
+          }
+        }
+
+        modal.classList.add("show");
+      }
+
+      function closeBranchModal() {
+        document.getElementById("branchModal").classList.remove("show");
+        document.getElementById("branchError").classList.remove("show");
+        currentEditId = null;
+
+        // Reset cluster field visibility
+        const clusterField = document.getElementById("branchCluster");
+        if (clusterField) {
+          clusterField.style.display = "block";
+          clusterField.previousElementSibling.style.display = "block";
+        }
+      }
+
+      async function saveBranch() {
+        const name = document.getElementById("branchName").value.trim();
+        const code = document
+          .getElementById("branchCode")
+          .value.trim()
+          .toUpperCase();
+        const location = document.getElementById("branchLocation").value.trim();
+
+        if (!name || !code) {
+          showModalError("branchError", "Please fill in all required fields");
+          return;
+        }
+
+        try {
+          let res;
+          if (currentEditId) {
+            res = await fetch(`${API_BASE}/api/branches/${currentEditId}`, {
+              method: "PATCH",
+              headers: getHeaders(),
+              body: JSON.stringify({
+                name,
+                code,
+                location: location || null,
+              }),
+            });
+          } else {
+            // ADD: Include cluster_id
+            const cluster_id = parseInt(
+              document.getElementById("branchCluster").value,
+            );
+            if (!cluster_id) {
+              showModalError("branchError", "Please select a cluster");
+              return;
+            }
+            res = await fetch(`${API_BASE}/api/branches`, {
+              method: "POST",
+              headers: getHeaders(),
+              body: JSON.stringify({
+                name,
+                code,
+                cluster_id,
+                location: location || null,
+              }),
+            });
+          }
+
+          if (!res.ok) {
+            let msg = "Failed to save branch";
+            try {
+              const data = await res.json();
+              if (data && data.detail) {
+                msg = data.detail;
+              }
+            } catch {}
+            showModalError("branchError", msg);
+            return;
+          }
+
+          closeBranchModal();
+          loadBranches();
+        } catch (err) {
+          showModalError("branchError", "Failed to save branch");
+        }
+      }
+
+      function editBranch(id) {
+        openBranchModal(id);
+      }
+
+      async function toggleBranchStatus(id, currentStatus) {
+        try {
+          const res = await fetch(`${API_BASE}/api/branches/${id}`, {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify({ is_active: !currentStatus }),
+          });
+
+          if (!res.ok) throw new Error("Failed");
+          loadBranches();
+        } catch (err) {
+          alert("Failed to update status");
+        }
+      }
+
+      async function deleteBranch(id) {
+        if (
+          !confirm(
+            "Are you sure you want to delete this branch? This action cannot be undone.",
+          )
+        )
+          return;
+
+        try {
+          const res = await fetch(`${API_BASE}/api/branches/${id}`, {
+            method: "DELETE",
+            headers: getHeaders(),
+          });
+
+          if (!res.ok) throw new Error("Failed");
+          loadBranches();
+        } catch (err) {
+          alert("Failed to delete branch");
+        }
+      }
+
+      // ============================================
+      // UTILITY FUNCTIONS
+      // ============================================
+
+      function showError(tableId, message) {
+        document.getElementById(tableId).innerHTML = `
+        <tr>
+            <td colspan="6" class="empty-state">⚠️ ${message}</td>
+        </tr>
+    `;
+      }
+
+      function showModalError(errorId, message) {
+        const errorEl = document.getElementById(errorId);
+        errorEl.textContent = message;
+        errorEl.classList.add("show");
+      }
+
+      // ============================================
+      // INITIALIZATION
+      // ============================================
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        if (!checkAuth()) return;
+
+        try {
+          // Load all data on startup
+          const [regionsRes, clustersRes, branchesRes] = await Promise.all([
+            fetch(`${API_BASE}/api/regions`, { headers: getHeaders() }),
+            fetch(`${API_BASE}/api/clusters`, { headers: getHeaders() }),
+            fetch(`${API_BASE}/api/branches`, { headers: getHeaders() }),
+          ]);
+
+          if (!regionsRes.ok || !clustersRes.ok || !branchesRes.ok) {
+            throw new Error("Failed to load data");
+          }
+
+          regionsData = await regionsRes.json();
+          clustersData = await clustersRes.json();
+          branchesData = await branchesRes.json();
+
+          // Render initial tab (Regions)
+          renderRegions(regionsData);
+        } catch (err) {
+          console.error("Initialization error:", err);
+          showError("regionsTable", "Failed to load data");
+        }
+      });
+    </script>
+  </body>
+</html>

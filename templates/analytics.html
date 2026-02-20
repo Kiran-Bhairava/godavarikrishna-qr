@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>QR Analytics</title>
+<link rel="icon" type="image/png" href="static/social/gk.png"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+:root{
+    --primary:#3b82f6;
+    --primary-light:#60a5fa;
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --border:#e2e8f0;
+    --text:#0f172a;
+    --muted:#64748b;
+    --success:#10b981;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+}
+
+.container{
+    max-width:1400px;
+    margin:0 auto;
+    padding:24px;
+}
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px;
+}
+
+.header-left h1{
+    font-size:20px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.live-badge{
+    background:#e0f2fe;
+    color:#0284c7;
+    font-size:10px;
+    font-weight:700;
+    padding:3px 8px;
+    border-radius:4px;
+}
+
+.subtitle{
+    font-size:13px;
+    color:var(--muted);
+    margin-top:4px;
+}
+
+.header-actions{
+    display:flex;
+    gap:10px;
+}
+
+.btn{
+    padding:8px 14px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    background:#fff;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    transition:all 0.2s;
+}
+
+.btn:hover{
+    background:#f8fafc;
+}
+
+.btn-primary{
+    background:var(--primary);
+    color:#fff;
+    border-color:var(--primary);
+}
+
+.btn-primary:hover{
+    background:var(--primary-light);
+}
+
+.filters{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+    margin-bottom:20px;
+}
+
+.filter-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:12px;
+}
+
+.filter-group label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    margin-bottom:6px;
+    color:var(--text);
+}
+
+.filter-group select,
+.filter-group input{
+    width:100%;
+    padding:8px 10px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-size:13px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:16px;
+    margin-bottom:20px;
+}
+
+.stat-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px;
+}
+
+.stat-label{
+    font-size:12px;
+    color:var(--muted);
+    text-transform:uppercase;
+    font-weight:600;
+    letter-spacing:0.5px;
+}
+
+.stat-value{
+    font-size:32px;
+    font-weight:700;
+    margin:8px 0 4px;
+}
+
+.stat-change{
+    font-size:12px;
+    color:var(--success);
+    font-weight:600;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+    margin-bottom:20px;
+}
+
+.chart-section{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.04);
+}
+
+
+.section-header{
+    margin-bottom:14px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--border);
+}
+
+
+.section-title{
+    font-size:14px;
+    font-weight:700;
+}
+
+.section-subtitle{
+    font-size:12px;
+    color:var(--muted);
+}
+
+.location-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+}
+
+.location-item:last-child{
+    border-bottom:none;
+}
+
+.location-name{
+    font-size:13px;
+    font-weight:500;
+}
+
+.location-count{
+    font-size:13px;
+    font-weight:700;
+    color:var(--primary);
+}
+
+.percentage{
+    font-size:11px;
+    color:var(--muted);
+    margin-left:4px;
+}
+
+.device-list{
+    margin-top:16px;
+}
+
+.device-item{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+    font-size:13px;
+    padding:10px 0;
+    border-bottom:1px solid var(--border);
+}
+
+.device-item:last-child{
+    border-bottom:none;
+}
+
+.device-icon{
+    width:20px;
+    text-align:center;
+}
+
+.device-label{
+    flex:1;
+    color:var(--text);
+    font-weight:500;
+}
+
+.device-value{
+    font-weight:700;
+    color:var(--primary);
+}
+
+.table-section{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:20px;
+}
+
+.table-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th{
+    text-align:left;
+    font-size:11px;
+    color:var(--muted);
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    padding:8px 0;
+    border-bottom:1px solid var(--border);
+}
+
+td{
+    padding:12px 0;
+    font-size:13px;
+    border-bottom:1px solid var(--border);
+}
+
+.device-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    padding:4px 8px;
+    background:#f1f5f9;
+    border-radius:4px;
+    font-size:12px;
+}
+
+.pagination{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+}
+
+.pagination-info{
+    font-size:13px;
+    color:var(--muted);
+}
+
+.pagination-btns{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+.pagination-btn{
+    padding:6px 12px;
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+    transition:all 0.2s;
+}
+
+.pagination-btn:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+}
+
+.pagination-btn:hover:not(:disabled){
+    background:#f8fafc;
+    border-color:var(--primary);
+}
+
+.pagination-btn.active{
+    background:var(--primary);
+    color:#fff;
+    border-color:var(--primary);
+}
+
+.page-size-select{
+    padding:6px 10px;
+    border:1px solid var(--border);
+    border-radius:6px;
+    font-size:13px;
+    cursor:pointer;
+}
+
+.no-data{
+    text-align:center;
+    padding:40px;
+    color:var(--muted);
+}
+
+.loading-overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    background:rgba(255,255,255,0.8);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:1000;
+}
+
+.loading-overlay.show{
+    display:flex;
+}
+
+.spinner{
+    width:40px;
+    height:40px;
+    border:3px solid var(--border);
+    border-top:3px solid var(--primary);
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+}
+
+.social-content{
+    display:grid;
+    grid-template-columns:220px 1fr;
+    gap:32px;
+    align-items:center;
+}
+
+#socialPieChart{
+    width:100% !important;
+    height:320px !important;
+}
+.social-stat{
+    background:#f1f5f9;
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+}
+
+.social-label{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.social-value{
+    font-size:40px;
+    font-weight:800;
+    color:var(--primary);
+    margin-top:6px;
+}
+
+.social-chart-wrap{
+    width:100%;
+    height:215px;   /* controls chart height */
+}
+
+#socialPieChart{
+    width:100% !important;
+    height:100% !important;
+}
+
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+</style>
+</head>
+
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div class="header-left">
+            <h1>
+                <span id="qrBranchName">-</span>Branch Analytics
+                <span class="live-badge">● LIVE DATA</span>
+            </h1>
+            <p class="subtitle">Real-time scan tracking with complete history</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn" onclick="window.location.href='/dashboard'">← Dashboard</button>
+            <button class="btn btn-primary" onclick="exportPDF()">Export PDF</button>
+        </div>
+    </div>
+
+    <div class="filters">
+        <div class="filter-row">
+            <div class="filter-group">
+                <label>QR Code</label>
+                <select id="qrSelect" onchange="resetAndLoad()"></select>
+            </div>
+            
+            <div class="filter-group">
+                <label>Time Range</label>
+                <select id="timeRange" onchange="toggleDates();resetAndLoad()">
+                    <option value="today">Today</option>
+                    <option value="7days">7 Days</option>
+                    <option value="30days" selected>30 Days</option>
+                    <option value="90days">90 Days</option>
+                    <option value="all">All Time</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Start Date</label>
+                <input type="date" id="startDate" disabled />
+            </div>
+
+            <div class="filter-group">
+                <label>End Date</label>
+                <input type="date" id="endDate" disabled />
+            </div>
+
+            <div class="filter-group" style="display:flex;align-items:flex-end">
+                <button class="btn btn-primary" style="width:100%" onclick="applyDates()">Apply Filter</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-label">Total Scans</div>
+            <div class="stat-value" id="totalScans">-</div>
+            <div class="stat-change" id="totalChange">All time</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Today</div>
+            <div class="stat-value" id="todayScans">-</div>
+            <div class="stat-change" id="todayChange">Last 24 hours</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Mobile</div>
+            <div class="stat-value" id="mobilePercent">-</div>
+            <div class="stat-change">Dominant device</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-label">Peak Hour</div>
+            <div class="stat-value" id="peakHour">-</div>
+            <div class="stat-change" id="peakLabel">Most active time</div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="chart-section">
+            <div class="section-header">
+                <div class="section-title">Top Locations</div>
+            </div>
+            <div id="locationsList"></div>
+        </div>
+
+        <div class="chart-section">
+            <div class="section-header">
+                <div class="section-title">Operating Systems</div>
+            </div>
+            <div class="device-list" id="osList"></div>
+        </div>
+    </div>
+
+    <div class="chart-section" style="margin-bottom:20px">
+        <div class="section-header">
+            <div class="section-title">📱 Social Media Analytics</div>
+        </div>
+        <div style="padding:20px">
+            <div id="socialContent" class="social-content">
+                <div class="social-stat">
+                    <div class="social-label">Total Clicks</div>
+                    <div class="social-value" id="totalSocialClicks">0</div>
+                </div>
+                <div class="social-chart-wrap">
+                    <canvas id="socialPieChart"></canvas>
+                </div>
+            </div>
+            <div id="socialLoading" style="display:none;text-align:center;padding:40px">
+                <div style="border:3px solid #e2e8f0;border-top:3px solid var(--primary);border-radius:50%;width:40px;height:40px;animation:spin 0.8s linear infinite;margin:0 auto"></div>
+            </div>
+            <div id="socialEmpty" style="display:none;text-align:center;padding:40px;color:var(--muted)">
+                No social media clicks in the selected period
+            </div>
+        </div>
+    </div>
+
+    <div class="table-section">
+        <div class="table-header">
+            <div>
+                <div class="section-title">Complete Scan History</div>
+                <div class="section-subtitle">All scans matching your filters</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+                <label style="font-size:12px;color:var(--muted)">Show:</label>
+                <select class="page-size-select" id="pageSize" onchange="changePageSize()">
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Device</th>
+                    <th>Browser</th>
+                    <th>Location</th>
+                    <th>OS</th>
+                </tr>
+            </thead>
+            <tbody id="scanTable"></tbody>
+        </table>
+
+        <div class="pagination">
+            <div class="pagination-info" id="paginationInfo">-</div>
+            <div class="pagination-btns">
+                <button class="pagination-btn" id="firstBtn" onclick="goToPage(1)">« First</button>
+                <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)">‹ Prev</button>
+                <span style="margin:0 8px;font-size:13px;color:var(--muted)">
+                    Page <strong id="currentPage">1</strong> of <strong id="totalPages">1</strong>
+                </span>
+                <button class="pagination-btn" id="nextBtn" onclick="changePage(1)">Next ›</button>
+                <button class="pagination-btn" id="lastBtn" onclick="goToLastPage()">Last »</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = 'https://qr-code-2-0-22ky.onrender.com';
+let LAST_ANALYTICS = null;
+let CURRENT_PAGE = 1;
+let PAGE_SIZE = 50;
+
+function getToken(){
+    return localStorage.getItem('token');
+}
+
+function checkAuth(){
+    if(!getToken()) window.location.href='/';
+}
+
+function showLoading(){
+    document.getElementById('loadingOverlay').classList.add('show');
+}
+
+function hideLoading(){
+    document.getElementById('loadingOverlay').classList.remove('show');
+}
+
+function toggleDates(){
+    const isCustom = document.getElementById('timeRange').value === 'custom';
+    document.getElementById('startDate').disabled = !isCustom;
+    document.getElementById('endDate').disabled = !isCustom;
+}
+
+function resetAndLoad(){
+    CURRENT_PAGE = 1;
+    loadAnalytics();
+}
+
+function applyDates(){
+    if(document.getElementById('timeRange').value === 'custom'){
+        resetAndLoad();
+    }
+}
+
+function changePageSize(){
+    PAGE_SIZE = parseInt(document.getElementById('pageSize').value);
+    CURRENT_PAGE = 1;
+    loadAnalytics();
+}
+
+function changePage(delta){
+    const newPage = CURRENT_PAGE + delta;
+    if(newPage < 1 || (LAST_ANALYTICS && newPage > LAST_ANALYTICS.total_pages)) return;
+    CURRENT_PAGE = newPage;
+    loadAnalytics();
+}
+
+function goToPage(page){
+    if(page < 1 || (LAST_ANALYTICS && page > LAST_ANALYTICS.total_pages)) return;
+    CURRENT_PAGE = page;
+    loadAnalytics();
+}
+
+function goToLastPage(){
+    if(LAST_ANALYTICS && LAST_ANALYTICS.total_pages > 0){
+        CURRENT_PAGE = LAST_ANALYTICS.total_pages;
+        loadAnalytics();
+    }
+}
+
+async function loadQRList(){
+    try{
+        const res = await fetch(`${API}/api/qr`,{
+            headers:{Authorization:`Bearer ${getToken()}`}
+        });
+
+        if(res.status===401){ window.location.href='/'; return; }
+
+        const qrNames = await res.json();
+        const select = document.getElementById('qrSelect');
+
+        if(qrNames.length===0){
+            select.innerHTML='<option>No QR codes</option>';
+            return;
+        }
+
+        // Get QR ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const selectedQRId = urlParams.get('qr');
+
+        select.innerHTML = qrNames.map(qr =>
+            `<option value="${qr.id}" ${selectedQRId && qr.id == selectedQRId ? 'selected' : ''}>${qr.name} (${qr.scan_count} scans)</option>`
+        ).join('');
+
+        // If URL has qr parameter, select that QR code
+        if(selectedQRId) {
+            select.value = selectedQRId;
+        }
+
+        loadAnalytics();
+
+    }catch(err){
+        console.error('Failed to load QR list:', err);
+        hideLoading();
+    }
+}
+
+async function loadAnalytics(){
+    const qrId = document.getElementById('qrSelect').value;
+    if(!qrId) return;
+
+    showLoading();
+
+    try{
+        const timeRange = document.getElementById('timeRange').value;
+        const params = new URLSearchParams({
+            timezone: 'Asia/Kolkata',
+            page: CURRENT_PAGE,
+            page_size: PAGE_SIZE
+        });
+
+        if(timeRange === 'custom'){
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            if(start && end){
+                params.append('start_date', start);
+                params.append('end_date', end);
+            }
+        }else{
+            params.append('time_range', timeRange);
+        }
+
+        const res = await fetch(`${API}/api/qr/${qrId}/analytics?${params}`,{
+            headers:{Authorization:`Bearer ${getToken()}`}
+        });
+
+        if(!res.ok) throw new Error('Failed to load analytics');
+
+        const data = await res.json();
+        LAST_ANALYTICS = data;
+
+        const qrRes = await fetch(`${API}/api/qr/${qrId}`,{
+            headers:{Authorization:`Bearer ${getToken()}`}
+        });
+        const qrData = await qrRes.json();
+        document.getElementById('qrBranchName').textContent = qrData.name;
+
+        renderStats(data);
+        renderLocations(data);
+        renderOSTypes(data);
+        renderTable(data);
+        renderPagination(data);
+        loadSocialAnalytics();
+    }catch(err){
+        console.error('Failed to load analytics:', err);
+        alert('Failed to load analytics. Please try again.');
+    }finally{
+        hideLoading();
+    }
+}
+
+function renderStats(data){
+    document.getElementById('totalScans').textContent = data.total_scans;
+    document.getElementById('todayScans').textContent = data.scans_today;
+    document.getElementById('mobilePercent').textContent = `${data.mobile_percentage}%`;
+    
+    const peak = data.peak_hour;
+    if(peak !== null){
+        const hour = peak > 12 ? peak - 12 : (peak === 0 ? 12 : peak);
+        const period = peak >= 12 ? 'PM' : 'AM';
+        document.getElementById('peakHour').textContent = `${hour} ${period}`;
+    }else{
+        document.getElementById('peakHour').textContent = '-';
+    }
+}
+
+function renderLocations(data){
+    const list = document.getElementById('locationsList');
+    
+    if(data.top_cities.length === 0){
+        list.innerHTML = '<div class="no-data">No location data</div>';
+        return;
+    }
+
+    const total = data.top_cities.reduce((sum, l) => sum + l.count, 0);
+    
+    list.innerHTML = data.top_cities.map(loc=>{
+        const percent = ((loc.count / total) * 100).toFixed(0);
+        return `
+            <div class="location-item">
+                <div class="location-name">${loc.city || 'Unknown'}, ${loc.country || ''}</div>
+                <div>
+                    <span class="location-count">${loc.count}</span>
+                    <span class="percentage">[${percent}%]</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderOSTypes(data){
+    const list = document.getElementById('osList');
+    
+    // Count OS from recent_scans
+    const osCounts = {};
+    data.recent_scans.forEach(scan => {
+        const os = scan.os || 'Unknown';
+        osCounts[os] = (osCounts[os] || 0) + 1;
+    });
+    
+    // Convert to array and sort by count
+    const osArray = Object.entries(osCounts)
+        .map(([os, count]) => ({os, count}))
+        .sort((a, b) => b.count - a.count);
+    
+    if(osArray.length === 0){
+        list.innerHTML = '<div class="no-data">No OS data</div>';
+        return;
+    }
+    
+    list.innerHTML = osArray.map(item => {
+        return `
+            <div class="device-item">
+                <span class="device-icon">📳</span>
+                <span class="device-label">${item.os}</span>
+                <span class="device-value">${item.count}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderTable(data){
+    const table = document.getElementById('scanTable');
+    
+    if(data.recent_scans.length === 0){
+        table.innerHTML = '<tr><td colspan="5" class="no-data">No scans found for this filter</td></tr>';
+        return;
+    }
+
+    table.innerHTML = data.recent_scans.map(scan=>{
+        const date = new Date(scan.scanned_at);
+        const time = date.toLocaleString('en-US', {
+            month:'2-digit',
+            day:'2-digit',
+            year:'numeric',
+            hour:'2-digit',
+            minute:'2-digit',
+            hour12:true
+        });
+        
+        const location = [scan.city, scan.country].filter(Boolean).join(', ') || 'Unknown';
+        
+        return `
+            <tr>
+                <td>${time}</td>
+                <td><span class="device-badge">📱 ${scan.device_type || 'Unknown'}</span></td>
+                <td>${scan.browser || '-'}</td>
+                <td>${location}</td>
+                <td>${scan.os || '-'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function renderPagination(data){
+    const info = document.getElementById('paginationInfo');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const firstBtn = document.getElementById('firstBtn');
+    const lastBtn = document.getElementById('lastBtn');
+    
+    const start = (data.page - 1) * data.page_size + 1;
+    const end = Math.min(data.page * data.page_size, data.filtered_scan_count);
+    
+    info.textContent = `Showing ${start}-${end} of ${data.filtered_scan_count} scans`;
+    
+    document.getElementById('currentPage').textContent = data.page;
+    document.getElementById('totalPages').textContent = data.total_pages;
+    
+    prevBtn.disabled = data.page === 1;
+    firstBtn.disabled = data.page === 1;
+    nextBtn.disabled = data.page >= data.total_pages;
+    lastBtn.disabled = data.page >= data.total_pages;
+}
+
+function exportPDF(){
+    if(!LAST_ANALYTICS){
+        alert('No data to export');
+        return;
+    }
+    
+    window.print();
+}
+
+let socialChart = null;
+
+async function loadSocialAnalytics() {
+    const loading = document.getElementById('socialLoading');
+    const content = document.getElementById('socialContent');
+    const empty = document.getElementById('socialEmpty');
+
+    loading.style.display = 'flex';
+    content.style.display = 'none';
+    empty.style.display = 'none';
+
+    try {
+        const timeRange = document.getElementById('timeRange').value;
+        const params = new URLSearchParams();
+
+        if (timeRange === 'custom') {
+            const start = document.getElementById('startDate').value;
+            const end = document.getElementById('endDate').value;
+            if (start && end) {
+                params.append('start_date', start);
+                params.append('end_date', end);
+            }
+        } else if (timeRange !== 'all') {
+            const now = new Date();
+            const daysMap = { today: 0, '7days': 7, '30days': 30, '90days': 90 };
+            const days = daysMap[timeRange];
+
+            if (days !== undefined) {
+                const startDate = new Date(now);
+                startDate.setDate(startDate.getDate() - days);
+
+                params.append('start_date', startDate.toISOString().split('T')[0]);
+                params.append('end_date', now.toISOString().split('T')[0]);
+            }
+        }
+
+        let url = `${API}/api/social-analytics`;
+        if (params.toString()) url += '?' + params.toString();
+
+        const res = await fetch(url, {
+            headers: { Authorization: `Bearer ${getToken()}` }
+        });
+        
+        if (res.status === 401) {
+            logout();
+            return;
+        }
+        
+        if (!res.ok) throw new Error('Failed to load social analytics');
+
+        const data = await res.json();
+        LAST_ANALYTICS = data;
+
+        document.getElementById('totalSocialClicks').textContent = data.total_clicks || 0;
+
+        if (!data.platforms || data.total_clicks === 0) {
+            empty.style.display = 'block';
+        } else {
+            content.style.display = 'grid';
+            renderSocialBarChart(data.platforms);
+        }
+
+    } catch (err) {
+        console.error('Error loading social analytics:', err);
+        empty.style.display = 'block';
+    } finally {
+        loading.style.display = 'none';
+    }
+}
+
+function renderSocialBarChart(platforms) {
+    const ctx = document.getElementById('socialPieChart').getContext('2d');
+
+    if (socialChart) {
+        socialChart.destroy();
+    }
+
+    const colors = {
+        facebook: '#1877F2',
+        instagram: '#E4405F',
+        youtube: '#FF0000',
+        twitter: '#1DA1F2',
+        whatsapp: '#25D366',
+        threads: '#000000'
+    };
+
+    const labels = platforms.map(p =>
+        p.platform.charAt(0).toUpperCase() + p.platform.slice(1)
+    );
+
+    const values = platforms.map(p => p.count);
+
+    const backgroundColors = platforms.map(p =>
+        colors[p.platform.toLowerCase()] || '#6366F1'
+    );
+
+    socialChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Clicks by Platform',
+                data: values,
+                backgroundColor: backgroundColors,
+                borderRadius: 6,
+                barThickness: 45
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: {
+                padding: 20
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: '#111827',
+                    titleColor: '#fff',
+                    bodyColor: '#e5e7eb',
+                    padding: 12,
+                    callbacks: {
+                        label: function (context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const value = context.raw;
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return ` ${value} clicks (${percentage}%)`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 12,
+                            weight: '600'
+                        }
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e5e7eb'
+                    },
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            animation: {
+                duration: 800,
+                easing: 'easeOutQuart'
+            }
+        }
+    });
+}
+
+
+checkAuth();
+loadQRList();
+</script>
+
+</body>
+</html>

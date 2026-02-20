@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Login - QR Manager</title>
+    <link rel="icon" type="image/png" href="static/social/gk.png"/>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: linear-gradient(135deg, #3b8be1 0%, #3b8be1 100%); 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+        }
+        
+        .login-container { 
+            background: white; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2); 
+            width: 100%; 
+            max-width: 440px; 
+            overflow: hidden; 
+        }
+        
+        .login-header { 
+            background: linear-gradient(135deg, #3b8be1 0%, #3b8be1 100%); 
+            color: white; 
+            padding: 48px 32px; 
+            text-align: center; 
+        }
+        
+        .lock-icon { 
+            width: 64px; 
+            height: 64px; 
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 0 auto 20px; 
+            font-size: 32px; 
+        }
+        
+        .login-header h1 { 
+            font-size: 28px; 
+            font-weight: 700; 
+            margin-bottom: 8px; 
+        }
+        
+        .login-header p { 
+            font-size: 14px; 
+            opacity: 0.95; 
+        }
+        
+        .login-form { 
+            padding: 36px 32px; 
+        }
+        
+        .form-group { 
+            margin-bottom: 24px; 
+        }
+        
+        label { 
+            display: block; 
+            font-size: 13px; 
+            font-weight: 600; 
+            color: #111827; 
+            margin-bottom: 8px; 
+        }
+        
+        input[type="email"], 
+        input[type="password"] { 
+            width: 100%; 
+            padding: 12px 14px; 
+            border: 1px solid #e5e7eb; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            transition: all 0.2s ease; 
+            background: #fff; 
+        }
+        
+        input[type="email"]:focus, 
+        input[type="password"]:focus { 
+            outline: none; 
+            border-color: #3b8be1;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1); 
+        }
+        
+        .sign-in-btn { 
+            width: 100%; 
+            padding: 12px; 
+            background: linear-gradient(135deg, #3b8be1 0%, #3b8be1 100%); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            margin-bottom: 16px; 
+        }
+        
+        .sign-in-btn:hover { 
+            transform: translateY(-1px); 
+            box-shadow: 0 8px 20px #3b8be1; 
+        }
+        
+        .sign-in-btn:disabled { 
+            opacity: 0.6; 
+            cursor: not-allowed; 
+            transform: none; 
+        }
+        
+        .error-message { 
+            background: #fee2e2; 
+            color: #991b1b; 
+            padding: 12px 14px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            margin-bottom: 16px; 
+            display: none; 
+            border-left: 3px solid #dc2626;
+        }
+        
+        .error-message.show { 
+            display: block; 
+        }
+        
+        .success-message { 
+            background: #d1fae5; 
+            color: #3b8be1;
+            padding: 12px 14px; 
+            border-radius: 8px; 
+            font-size: 13px; 
+            margin-bottom: 16px; 
+            display: none;
+            border-left: 3px solid #3b8be1;
+        }
+        
+        .success-message.show { 
+            display: block; 
+        }
+        
+        .loading { 
+            display: none; 
+            width: 16px; 
+            height: 16px; 
+            border: 2px solid rgba(255, 255, 255, 0.3); 
+            border-top: 2px solid white; 
+            border-radius: 50%; 
+            animation: spin 0.8s linear infinite; 
+            margin-right: 8px; 
+            vertical-align: middle; 
+        }
+        
+        .loading.show { 
+            display: inline-block; 
+        }
+        
+        @keyframes spin { 
+            to { transform: rotate(360deg); } 
+        }
+
+        .footer-info {
+            text-align: center;
+            padding: 20px 32px;
+            background: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .footer-info strong {
+            color: #111827;
+        }
+
+        .demo-credentials {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #1e40af;
+        }
+
+        .demo-credentials strong {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .login-header {
+            display: flex;
+            align-items: center;          /* vertical centering */
+            justify-content: center;
+            gap: 18px;
+            background: #3b8be1;
+            padding: 28px 32px;
+            color: white;
+        }
+
+        /* LOGO */
+        .login-header img {
+            width: 150px;
+            height: 100px;
+            object-fit: contain;
+            flex-shrink: 0;
+            display: block;
+            margin-left: -40px;               /* removes baseline gap */
+        }
+
+        /* TEXT CONTAINER */
+        .header-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.2;
+        }
+
+        /* TEXT STYLES */
+        .header-text h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            width: fit-content;
+        }
+
+        .header-text h2 {
+            font-size: 15px;
+            font-weight: 500;
+            margin: 2px 0 4px;
+            width: fit-content;
+        }
+
+        .header-text h3 {
+            font-size: 13px;
+            font-weight: 600;
+            width: fit-content;
+            margin: 0;
+            opacity: 0.9;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+        <img 
+            src="static/social/gk.png" 
+            alt="GK Logo">
+            <div class="header-text">
+                <h1>Godavari-Krishna</h1>
+                <h2>Co-Operative Society Ltd.</h2>
+                <span>
+                <h3>Employee Login</h3></span>
+            </div>
+       
+        </div>
+
+        <!-- <div class="login-header">
+            <h1>Employee Login</h1>
+            <p>QR Code Management System</p>
+        </div> -->
+
+
+        <div class="login-form">
+            <!-- <div class="demo-credentials">
+                <strong>🔑 Demo Access</strong>
+                Email: marketing@company.com<br>
+                Password: marketing123
+            </div> -->
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" placeholder="marketing@company.com" required autocomplete="email" />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password" />
+                </div>
+
+                <button type="submit" class="sign-in-btn" id="signInBtn">
+                    <span class="loading" id="loadingSpinner"></span>
+                    Sign In to Dashboard
+                </button>
+            </form>
+        </div>
+
+        <div class="footer-info">
+            Secure access to <strong>QR Manager</strong><br>
+            Need help? Contact IT support
+        </div>
+    </div>
+
+    <script>
+        const API = 'https://qr-code-2-0-22ky.onrender.com';
+        
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const signInBtn = document.getElementById('signInBtn');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        function showError(message) {
+            errorMessage.textContent = '❌ ' + message;
+            errorMessage.classList.add('show');
+            successMessage.classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = '✅ ' + message;
+            successMessage.classList.add('show');
+            errorMessage.classList.remove('show');
+        }
+
+        function clearMessages() {
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearMessages();
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showError('Please fill in all fields');
+                return;
+            }
+
+            signInBtn.disabled = true;
+            loadingSpinner.classList.add('show');
+
+            try {
+                const res = await fetch(`${API}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showError(data.detail || 'Login failed. Please check your credentials.');
+                    return;
+                }
+
+                localStorage.setItem('token', data.access_token);
+                showSuccess('Login successful! Redirecting to Home...');
+                
+                setTimeout(() => {
+                    window.location.href = '/home';
+                }, 1000);
+
+            } catch (error) {
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                signInBtn.disabled = false;
+                loadingSpinner.classList.remove('show');
+            }
+        });
+
+        emailInput.addEventListener('focus', clearMessages);
+        passwordInput.addEventListener('focus', clearMessages);
+
+        // Check if already logged in
+        if (localStorage.getItem('token')) {
+            window.location.href = '/home';
+        }
+    </script>
+</body>
+</html>

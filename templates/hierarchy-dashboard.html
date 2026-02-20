@@ -1,0 +1,2178 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analytics Dashboard</title>
+    <link rel="icon" type="image/png" href="static/social/gk.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --primary-light: #60a5fa;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --border: #e2e8f0;
+        --text: #0f172a;
+        --muted: #64748b;
+        --success: #10b981;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 14px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      /* Header Styles */
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+
+      .header-left h1 {
+        font-size: 20px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .live-badge {
+        background: #e0f2fe;
+        color: #0284c7;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 4px;
+      }
+
+      .subtitle {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+
+      .header-filters {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .header-filters select {
+        padding: 8px 32px 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 14px;
+        background: white;
+        cursor: pointer;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border: 1px solid var(--border);
+        background: white;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        color: var(--text);
+      }
+
+      .btn-primary {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+
+      .btn-primary:hover {
+        background: var(--primary-light);
+      }
+
+      /* Main Content Area */
+      .main-content {
+        min-height: 500px;
+      }
+
+      /* Common Card Styles */
+      .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text);
+        margin: 8px 0 4px;
+      }
+
+      .stat-change {
+        font-size: 12px;
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      .chart-section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .section-header {
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .section-title {
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .section-subtitle {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      /* Hierarchy Dashboard Styles */
+      .hierarchy-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .hierarchy-charts {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .chart-container {
+        position: relative;
+        height: 300px;
+      }
+
+      .user-comp {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .donut-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+      }
+
+      .donut-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .donut-percent {
+        font-size: 36px;
+        font-weight: 700;
+      }
+
+      .donut-label {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .user-stats {
+        width: 100%;
+      }
+
+      .user-stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .user-stat-row:last-child {
+        border-bottom: none;
+      }
+
+      .user-stat-label {
+        font-size: 13px;
+        color: var(--muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .legend-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .user-stat-value {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .ranking-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+      }
+
+      .ranking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .ranking-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .ranking-table th {
+        text-align: left;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .ranking-table td {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .rank-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        background: #fef3c7;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .item-name {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .item-meta {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+
+      /* Branch Analytics Styles (when branch is selected) */
+      .branch-filters {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+
+      .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+      }
+
+      .filter-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: var(--text);
+      }
+
+      .filter-group select,
+      .filter-group input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 13px;
+      }
+
+      .branch-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .branch-charts {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .location-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .location-item:last-child {
+        border-bottom: none;
+      }
+
+      .location-name {
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .location-count {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .percentage {
+        font-size: 11px;
+        color: var(--muted);
+        margin-left: 4px;
+      }
+
+      .device-list {
+        margin-top: 16px;
+      }
+
+      .device-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        font-size: 13px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .device-item:last-child {
+        border-bottom: none;
+      }
+
+      .device-icon {
+        width: 20px;
+        text-align: center;
+      }
+
+      .device-label {
+        flex: 1;
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .device-value {
+        font-weight: 700;
+        color: var(--primary);
+      }
+
+      .branch-table-section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 20px;
+      }
+
+      .table-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        text-align: left;
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      td {
+        padding: 12px 0;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .device-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        background: #f1f5f9;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+      }
+
+      .pagination-info {
+        font-size: 13px;
+        color: var(--muted);
+      }
+
+      .pagination-btns {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .pagination-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .pagination-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .pagination-btn.active {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+
+      .page-size-select {
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+
+      .no-data {
+        text-align: center;
+        padding: 40px;
+        color: var(--muted);
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .loading-overlay.show {
+        display: flex;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid var(--border);
+        border-top: 3px solid var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: var(--muted);
+      }
+
+      .user-composition-section {
+        margin-bottom: 20px;
+      }
+
+      .user-stats {
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .user-stat-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .user-stat-row:last-child {
+        border-bottom: none;
+      }
+
+      .user-stat-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .user-stat-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      /* Export Button */
+      .export-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="loading-overlay show" id="loadingOverlay">
+      <div
+        style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 12px;
+        "
+      >
+        <div class="spinner"></div>
+        <div
+          style="font-size: 13px; color: var(--muted); letter-spacing: 0.5px"
+        >
+          Loading analytics…
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- Header (ALWAYS shows the same filters) -->
+      <div class="header">
+        <div class="header-left">
+          <h1 id="pageTitle">Region Analytics & Trends</h1>
+          <p class="subtitle" id="pageSubtitle">ENTERPRISE PERFORMANCE</p>
+        </div>
+        <div class="header-filters">
+          <select id="regionFilter" onchange="onRegionChange()">
+            <option value="">All Regions</option>
+          </select>
+          <select id="clusterFilter" onchange="onClusterChange()">
+            <option value="">All Clusters</option>
+          </select>
+          <select id="branchFilter" onchange="onBranchChange()">
+            <option value="">All Branches</option>
+          </select>
+          <button
+            class="btn btn-primary export-btn"
+            onclick="exportPDF()"
+            id="exportBtn"
+            style="display: none"
+          >
+            Export PDF
+          </button>
+          <a href="/home" class="btn">← Home</a>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div id="mainContent" class="main-content">
+        <!-- Default content will be loaded here -->
+      </div>
+    </div>
+
+    <script>
+      const API = "https://qr-code-2-0-22ky.onrender.com";
+      let token = localStorage.getItem("token");
+      let regions = [],
+        clusters = [],
+        branches = [];
+      // let charts = {};
+      let currentData = null;
+
+      // Analytics variables
+      let LAST_ANALYTICS = null;
+      let CURRENT_PAGE = 1;
+      let PAGE_SIZE = 50;
+      let selectedBranch = null;
+      let selectedBranchQRId = null;
+      let charts = {
+        bar: null,
+        donut: null,
+        userPie: null,
+      };
+
+      if (!token) window.location.href = "/";
+
+      async function api(endpoint) {
+        const res = await fetch(`${API}${endpoint}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          window.location.href = "/";
+          return;
+        }
+        return res.json();
+      }
+
+      async function init() {
+        try {
+          const user = await api("/auth/me");
+          if (!user.is_super_admin) {
+            alert("Access denied - Super Admin only");
+            window.location.href = "/home";
+            return;
+          }
+
+          regions = await api("/api/regions");
+          clusters = await api("/api/clusters");
+          branches = await api("/api/branches");
+
+          populateRegionFilter();
+          await loadHierarchyAnalytics();
+        } catch (e) {
+          console.error("Init failed:", e);
+        } finally {
+          hideLoading(); // Hide loader after first render
+        }
+      }
+
+      function populateRegionFilter() {
+        const regionFilter = document.getElementById("regionFilter");
+        regionFilter.innerHTML =
+          '<option value="">All Regions</option>' +
+          regions
+            .map((r) => `<option value="${r.id}">${r.name}</option>`)
+            .join("");
+      }
+
+      function onRegionChange() {
+        const regionId = document.getElementById("regionFilter").value;
+        const clusterFilter = document.getElementById("clusterFilter");
+        const branchFilter = document.getElementById("branchFilter");
+
+        if (regionId) {
+          const regionClusters = clusters.filter(
+            (c) => c.region_id == regionId,
+          );
+          clusterFilter.innerHTML =
+            '<option value="">All Clusters</option>' +
+            regionClusters
+              .map((c) => `<option value="${c.id}">${c.name}</option>`)
+              .join("");
+        } else {
+          clusterFilter.innerHTML = '<option value="">All Clusters</option>';
+        }
+
+        branchFilter.innerHTML = '<option value="">All Branches</option>';
+
+        // Clear branch selection if changing region
+        selectedBranch = null;
+        selectedBranchQRId = null;
+        document.getElementById("exportBtn").style.display = "none";
+
+        loadHierarchyAnalytics();
+      }
+
+      function onClusterChange() {
+        const clusterId = document.getElementById("clusterFilter").value;
+        const branchFilter = document.getElementById("branchFilter");
+
+        if (clusterId) {
+          const clusterBranches = branches.filter(
+            (b) => b.cluster_id == clusterId,
+          );
+          branchFilter.innerHTML =
+            '<option value="">All Branches</option>' +
+            clusterBranches
+              .map((b) => `<option value="${b.id}">${b.name}</option>`)
+              .join("");
+        } else {
+          branchFilter.innerHTML = '<option value="">All Branches</option>';
+        }
+
+        // Clear branch selection if changing cluster
+        selectedBranch = null;
+        selectedBranchQRId = null;
+        document.getElementById("exportBtn").style.display = "none";
+
+        loadHierarchyAnalytics();
+      }
+
+      async function onBranchChange() {
+        const branchId = document.getElementById("branchFilter").value;
+
+        if (branchId) {
+          // Switch to branch analytics view
+          selectedBranch = branches.find((b) => b.id == branchId);
+
+          // Update page title
+          document.getElementById("pageTitle").innerHTML = `
+            ${selectedBranch.name} Branch Analytics
+            <span class="live-badge">● LIVE DATA</span>
+        `;
+          document.getElementById("pageSubtitle").textContent =
+            "Real-time scan tracking with complete history";
+
+          // Show export button
+          document.getElementById("exportBtn").style.display = "inline-flex";
+
+          // First test if API endpoints are working
+          console.log("Testing API endpoints for branch:", selectedBranch.name);
+          const apiTest = await testAPIEndpoints();
+
+          if (!apiTest) {
+            alert(
+              "Warning: Branch analytics API endpoint might not be accessible. Some features may not work.",
+            );
+          }
+
+          // Get QR ID for this specific branch
+          await getBranchQRId();
+
+          // Load branch analytics
+          loadBranchAnalytics();
+        } else {
+          // Switch back to hierarchy view
+          selectedBranch = null;
+          selectedBranchQRId = null;
+          document.getElementById("pageTitle").textContent =
+            "Region Analytics & Trends";
+          document.getElementById("pageSubtitle").textContent =
+            "ENTERPRISE PERFORMANCE";
+          document.getElementById("exportBtn").style.display = "none";
+
+          loadHierarchyAnalytics();
+        }
+      }
+
+      async function getBranchAnalytics(
+        branchId,
+        startDate = null,
+        endDate = null,
+      ) {
+        try {
+          let url = `${API}/analytics/branches/${branchId}`;
+
+          const params = new URLSearchParams();
+          if (startDate) params.append("start_date", startDate);
+          if (endDate) params.append("end_date", endDate);
+
+          if (params.toString()) {
+            url += `?${params.toString()}`;
+          }
+
+          console.log("Fetching branch analytics from:", url);
+
+          const res = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "/";
+            return null;
+          }
+
+          if (!res.ok) {
+            console.error(
+              `Failed to fetch branch analytics: ${res.status} ${res.statusText}`,
+            );
+            return null;
+          }
+
+          const data = await res.json();
+          console.log("Branch analytics data:", data);
+          return data;
+        } catch (err) {
+          console.error("Failed to fetch branch analytics:", err);
+          return null;
+        }
+      }
+
+      async function getBranchQRId() {
+        try {
+          const qrRes = await fetch(`${API}/api/qr`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (qrRes.status === 401) {
+            window.location.href = "/";
+            return;
+          }
+
+          const qrList = await qrRes.json();
+
+          if (!selectedBranch) {
+            selectedBranchQRId = null;
+            return;
+          }
+
+          // Check if QR exists for this branch by branch_id
+          const branchQR = qrList.find(
+            (qr) => qr.branch_id === selectedBranch.id,
+          );
+
+          if (branchQR) {
+            selectedBranchQRId = branchQR.id;
+            console.log(
+              `Found QR for branch ${selectedBranch.name}:`,
+              branchQR,
+            );
+          } else {
+            selectedBranchQRId = null;
+            console.log(`No QR mapped to branch ${selectedBranch.name}`);
+          }
+        } catch (err) {
+          console.error("Failed to get branch QR ID:", err);
+          selectedBranchQRId = null;
+        }
+      }
+
+      async function loadHierarchyAnalytics() {
+        const regionId = document.getElementById("regionFilter").value;
+        const clusterId = document.getElementById("clusterFilter").value;
+
+        let data;
+        let viewLevel = "regions";
+
+        if (clusterId) {
+          // Cluster level
+          data = await api(
+            `/analytics/clusters/${clusterId}?include_branches=true`,
+          );
+          const cluster = clusters.find((c) => c.id == clusterId);
+          document.getElementById("pageTitle").textContent =
+            `${cluster.name} Analytics`;
+          document.getElementById("pageSubtitle").textContent =
+            "CLUSTER PERFORMANCE";
+          viewLevel = "cluster";
+        } else if (regionId) {
+          // Single region
+          data = await api(`/analytics/regions?include_details=true`);
+          data = data.filter((r) => r.region_id == regionId);
+          const region = regions.find((r) => r.id == regionId);
+          document.getElementById("pageTitle").textContent =
+            `${region.name} Analytics`;
+          document.getElementById("pageSubtitle").textContent =
+            "REGION PERFORMANCE";
+          viewLevel = "region";
+        } else {
+          // All regions
+          data = await api("/analytics/regions?include_details=true");
+          document.getElementById("pageTitle").textContent =
+            "Region Analytics & Trends";
+          document.getElementById("pageSubtitle").textContent =
+            "ENTERPRISE PERFORMANCE";
+          viewLevel = "regions";
+        }
+
+        renderHierarchyContent(data, viewLevel);
+      }
+
+      function renderHierarchyContent(data, viewLevel) {
+        const mainContent = document.getElementById("mainContent");
+
+        // Calculate stats
+        let totals = { qr: 0, social: 0, combined: 0, new: 0, returning: 0 };
+
+        if (viewLevel === "cluster") {
+          totals = {
+            qr: data.total_qr_scans,
+            social: data.total_social_clicks,
+            combined: data.combined_total,
+            new: data.new_vs_returning.new_users,
+            returning: data.new_vs_returning.returning_users,
+          };
+        } else {
+          data.forEach((item) => {
+            totals.qr += item.total_qr_scans;
+            totals.social += item.total_social_clicks;
+            totals.combined += item.combined_total;
+            totals.new += item.new_vs_returning.new_users;
+            totals.returning += item.new_vs_returning.returning_users;
+          });
+        }
+
+        const total = totals.new + totals.returning;
+        const retention = total > 0 ? (totals.returning / total) * 100 : 0;
+        const newPercent = total > 0 ? (totals.new / total) * 100 : 0;
+
+        // Create ranking items
+        let items = [];
+        let rankingTitle = "";
+        let rankingSubtitle = "";
+
+        if (viewLevel === "cluster") {
+          items = data.branches.map((b) => ({
+            name: b.branch_name,
+            meta: "Branch",
+            combined: b.combined_total,
+            qr: b.total_qr_scans,
+            social: b.total_social_clicks,
+            newUsers: b.new_vs_returning.new_users,
+          }));
+          rankingTitle = "Branch Performance Ranking";
+          rankingSubtitle = "Ranked by combined traffic within cluster";
+        } else if (viewLevel === "region") {
+          items = data[0].clusters.map((c) => ({
+            name: c.cluster_name,
+            meta: `${c.branches.length} Branches`,
+            combined: c.combined_total,
+            qr: c.total_qr_scans,
+            social: c.total_social_clicks,
+            newUsers: c.new_vs_returning.new_users,
+          }));
+          rankingTitle = "Cluster Performance Ranking";
+          rankingSubtitle = "Ranked by combined traffic within region";
+        } else {
+          data.forEach((region) => {
+            region.clusters.forEach((cluster) => {
+              items.push({
+                name: cluster.cluster_name,
+                meta: `${region.region_name} - ${cluster.branches.length} Branches`,
+                combined: cluster.combined_total,
+                qr: cluster.total_qr_scans,
+                social: cluster.total_social_clicks,
+                newUsers: cluster.new_vs_returning.new_users,
+              });
+            });
+          });
+          rankingTitle = "Cluster Performance Ranking";
+          rankingSubtitle = "Ranked by combined traffic across all regions";
+        }
+
+        items.sort((a, b) => b.newUsers - a.newUsers);
+
+        mainContent.innerHTML = `
+        <div class="hierarchy-stats">
+            <div class="stat-card">
+                <div class="stat-label">Total QR Scans</div>
+                <div class="stat-value">${totals.qr.toLocaleString()}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Social Clicks</div>
+                <div class="stat-value">${totals.social.toLocaleString()}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Combined Total</div>
+                <div class="stat-value">${totals.combined.toLocaleString()}</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Retention Rate</div>
+                <div class="stat-value">${retention.toFixed(1)}%</div>
+            </div>
+        </div>
+
+        <div class="hierarchy-charts">
+            <div class="chart-section">
+                <div class="section-header">
+                    <div class="section-title">Performance Distribution</div>
+                    <div class="section-subtitle">QR Scans vs Social Clicks breakdown</div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <div class="section-header">
+                    <div class="section-title">User Composition</div>
+                    <div class="section-subtitle">New vs. Returning Engagement</div>
+                </div>
+                <div class="user-comp">
+                    <div class="donut-container">
+                        <canvas id="donutChart"></canvas>
+                        <div class="donut-center">
+                            <div class="donut-percent">${newPercent.toFixed(0)}%</div>
+                            <div class="donut-label">NEW</div>
+                        </div>
+                    </div>
+                    <div class="user-stats">
+                        <div class="user-stat-row">
+                            <div class="user-stat-label">
+                                <div class="legend-dot" style="background:var(--primary);"></div>
+                                New Users
+                            </div>
+                            <div class="user-stat-value">${totals.new.toLocaleString()}</div>
+                        </div>
+                        <div class="user-stat-row">
+                            <div class="user-stat-label">
+                                <div class="legend-dot" style="background:var(--border);"></div>
+                                Returning
+                            </div>
+                            <div class="user-stat-value">${totals.returning.toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ranking-card">
+            <div class="ranking-header">
+                <div>
+                    <div class="section-title">${rankingTitle}</div>
+                    <div class="section-subtitle">${rankingSubtitle}</div>
+                </div>
+            </div>
+            <table class="ranking-table">
+                <thead>
+                    <tr>
+                        <th style="width:60px;">RANK</th>
+                        <th>NAME</th>
+                        <th style="text-align:right;">COMBINED TOTAL</th>
+                        <th style="text-align:right;">QR SCANS</th>
+                        <th style="text-align:right;">SOCIAL CLICKS</th>
+                        <th style="text-align:right;">NEW USERS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items
+                      .map(
+                        (item, i) => `
+                        <tr>
+                            <td><div class="rank-badge">${i + 1}</div></td>
+                            <td>
+                                <div class="item-name">${item.name}</div>
+                                <div class="item-meta">${item.meta}</div>
+                            </td>
+                            <td style="text-align:right;font-weight:600;">${item.combined.toLocaleString()}</td>
+                            <td style="text-align:right;">${item.qr.toLocaleString()}</td>
+                            <td style="text-align:right;">${item.social.toLocaleString()}</td>
+                            <td style="text-align:right;">${item.newUsers.toLocaleString()}</td>
+                        </tr>
+                    `,
+                      )
+                      .join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+
+        // Render charts
+        setTimeout(() => {
+          renderHierarchyCharts(data, viewLevel);
+        }, 100);
+      }
+
+      function renderHierarchyCharts(data, viewLevel) {
+        // Bar chart
+        const barCtx = document.getElementById("barChart");
+        if (charts.bar) charts.bar.destroy();
+
+        let items = [];
+
+        if (viewLevel === "cluster") {
+          items = data.branches.map((b) => ({
+            label: b.branch_name,
+            qr: b.total_qr_scans,
+            social: b.total_social_clicks,
+          }));
+        } else if (viewLevel === "region") {
+          items = data[0].clusters.map((c) => ({
+            label: c.cluster_name,
+            qr: c.total_qr_scans,
+            social: c.total_social_clicks,
+          }));
+        } else {
+          items = data.map((r) => ({
+            label: r.region_name,
+            qr: r.total_qr_scans,
+            social: r.total_social_clicks,
+          }));
+        }
+
+        charts.bar = new Chart(barCtx, {
+          type: "bar",
+          data: {
+            labels: items.map((i) => i.label),
+            datasets: [
+              {
+                label: "QR Scans",
+                data: items.map((i) => i.qr),
+                backgroundColor: "#3b82f6",
+              },
+              {
+                label: "Social Clicks",
+                data: items.map((i) => i.social),
+                backgroundColor: "#10b981",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { stacked: true },
+              y: { stacked: true, beginAtZero: true },
+            },
+          },
+        });
+
+        // Donut chart
+        const donutCtx = document.getElementById("donutChart");
+        if (charts.donut) charts.donut.destroy();
+
+        let totals = { new: 0, returning: 0 };
+
+        if (viewLevel === "cluster") {
+          totals = {
+            new: data.new_vs_returning.new_users,
+            returning: data.new_vs_returning.returning_users,
+          };
+        } else {
+          data.forEach((item) => {
+            totals.new += item.new_vs_returning.new_users;
+            totals.returning += item.new_vs_returning.returning_users;
+          });
+        }
+
+        charts.donut = new Chart(donutCtx, {
+          type: "doughnut",
+          data: {
+            datasets: [
+              {
+                data: [totals.new, totals.returning],
+                backgroundColor: ["#3b82f6", "#e2e8f0"],
+                borderWidth: 0,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            cutout: "75%",
+            plugins: { legend: { display: false } },
+          },
+        });
+      }
+
+      // Branch Analytics Functions
+      async function loadBranchAnalytics() {
+        if (!selectedBranch || !selectedBranchQRId) {
+          // If no QR ID found for this branch, show message
+          renderNoQRFound();
+          return;
+        }
+
+        showLoading();
+
+        try {
+          // Load analytics for this specific branch's QR code
+          await loadAnalyticsForBranch(selectedBranchQRId);
+        } catch (err) {
+          console.error("Failed to load branch analytics:", err);
+          alert("Failed to load branch analytics. Please try again.");
+          hideLoading();
+        }
+      }
+
+      function renderNoQRFound() {
+        const mainContent = document.getElementById("mainContent");
+
+        mainContent.innerHTML = `
+        <div class="no-data">
+            <div style="font-size:24px;margin-bottom:16px;">📭</div>
+            <h3 style="margin-bottom:8px;">No QR Code Found</h3>
+            <p>No QR code is associated with "${selectedBranch.name}" branch.</p>
+            <p style="font-size:12px;margin-top:8px;">Please create a QR code for this branch to view analytics.</p>
+        </div>
+    `;
+      }
+
+      async function loadAnalyticsForBranch(qrId) {
+        try {
+          showLoading();
+
+          // Get timeRange from existing element or use default
+          const timeRangeElement = document.getElementById("timeRange");
+          const timeRange = timeRangeElement
+            ? timeRangeElement.value
+            : "30days";
+
+          let startDate = null;
+          let endDate = null;
+          let backendTimeRange = timeRange; // This is what we'll send to backend
+
+          // Calculate dates based on time range
+          const today = new Date();
+
+          // If custom range is selected, get dates from input fields
+          if (timeRange === "custom") {
+            const startDateInput = document.getElementById("startDate");
+            const endDateInput = document.getElementById("endDate");
+            startDate = startDateInput ? startDateInput.value : null;
+            endDate = endDateInput ? endDateInput.value : null;
+
+            // Validate custom dates
+            if (!startDate || !endDate) {
+              throw new Error(
+                "Please select both start and end dates for custom range",
+              );
+            }
+
+            // Don't send time_range parameter for custom dates
+            backendTimeRange = null;
+          } else {
+            // For predefined ranges, calculate dates
+            switch (timeRange) {
+              case "today":
+                startDate = today.toISOString().split("T")[0];
+                endDate = startDate;
+                break;
+              case "7days":
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(today.getDate() - 7);
+                startDate = sevenDaysAgo.toISOString().split("T")[0];
+                endDate = today.toISOString().split("T")[0];
+                break;
+              case "30days":
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(today.getDate() - 30);
+                startDate = thirtyDaysAgo.toISOString().split("T")[0];
+                endDate = today.toISOString().split("T")[0];
+                break;
+              case "90days":
+                const ninetyDaysAgo = new Date();
+                ninetyDaysAgo.setDate(today.getDate() - 90);
+                startDate = ninetyDaysAgo.toISOString().split("T")[0];
+                endDate = today.toISOString().split("T")[0];
+                break;
+              case "all":
+                startDate = null;
+                endDate = null;
+                backendTimeRange = "all";
+                break;
+            }
+          }
+
+          console.log("Fetching analytics for branch:", {
+            branchId: selectedBranch.id,
+            qrId: qrId,
+            startDate: startDate,
+            endDate: endDate,
+            timeRange: timeRange,
+            backendTimeRange: backendTimeRange,
+          });
+
+          // Build URL for QR analytics
+          const params = new URLSearchParams();
+
+          // For predefined ranges, send time_range parameter
+          if (backendTimeRange && backendTimeRange !== "custom") {
+            params.append("time_range", backendTimeRange);
+          }
+
+          // Add date parameters if they exist (for custom range or to override predefined)
+          if (startDate) params.append("start_date", startDate);
+          if (endDate) params.append("end_date", endDate);
+
+          // Add pagination parameters
+          params.append("page", CURRENT_PAGE);
+          params.append("page_size", PAGE_SIZE);
+
+          // Timezone parameter (as shown in backend)
+          params.append("timezone", "Asia/Kolkata");
+
+          // Build the URL
+          const qrAnalyticsUrl = `${API}/api/qr/${qrId}/analytics?${params.toString()}`;
+
+          console.log("QR Analytics URL:", qrAnalyticsUrl);
+
+          // Try to fetch both analytics in parallel
+          const qrAnalyticsPromise = fetch(qrAnalyticsUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          const branchAnalyticsPromise = getBranchAnalytics(
+            selectedBranch.id,
+            startDate,
+            endDate,
+          );
+
+          const [qrAnalyticsRes, branchAnalytics] = await Promise.all([
+            qrAnalyticsPromise,
+            branchAnalyticsPromise,
+          ]);
+
+          console.log(
+            "QR Analytics response status:",
+            qrAnalyticsRes.status,
+            qrAnalyticsRes.statusText,
+          );
+
+          if (!qrAnalyticsRes.ok) {
+            // Try to get more details about the error
+            let errorDetails = "";
+            try {
+              const errorResponse = await qrAnalyticsRes.json();
+              console.log("Error response details:", errorResponse);
+              errorDetails = JSON.stringify(errorResponse);
+            } catch (e) {
+              errorDetails = await qrAnalyticsRes.text();
+            }
+
+            throw new Error(
+              `QR Analytics failed: ${qrAnalyticsRes.status} ${qrAnalyticsRes.statusText}. Details: ${errorDetails}`,
+            );
+          }
+
+          const qrAnalytics = await qrAnalyticsRes.json();
+
+          // Combine both analytics data - SAVE THE DATES!
+          LAST_ANALYTICS = {
+            ...qrAnalytics,
+            timeRange: timeRange, // Save the UI timeRange
+            backendTimeRange: backendTimeRange, // Save what we sent to backend
+            startDate: startDate, // SAVE START DATE
+            endDate: endDate, // SAVE END DATE
+            branch_stats: branchAnalytics || {
+              new_vs_returning: {
+                new_users: 0,
+                returning_users: 0,
+                new_percentage: 0,
+                returning_percentage: 0,
+              },
+              combined_total: 0,
+            },
+          };
+
+          console.log("Combined analytics data:", LAST_ANALYTICS);
+
+          // Render branch analytics with this data
+          renderBranchAnalytics(LAST_ANALYTICS, qrId);
+        } catch (err) {
+          console.error("Failed to load analytics:", err);
+
+          // Show a more informative error
+          const mainContent = document.getElementById("mainContent");
+          mainContent.innerHTML = `
+            <div class="no-data">
+                <div style="font-size:24px;margin-bottom:16px;">⚠️</div>
+                <h3 style="margin-bottom:8px;">Failed to Load Analytics</h3>
+                <p>Error: ${err.message || "Please try again later."}</p>
+                <p style="font-size:12px;margin-top:8px;">Make sure your backend server is running and the API endpoints are accessible.</p>
+                <button class="btn btn-primary" style="margin-top:16px;" onclick="loadBranchAnalytics()">Retry</button>
+            </div>
+        `;
+        } finally {
+          hideLoading();
+        }
+      }
+
+      function renderUserPieChart(data) {
+        const pieCtx = document.getElementById("userPieChart");
+
+        if (!pieCtx) {
+          console.warn("userPieChart canvas element not found");
+          return;
+        }
+
+        // Destroy existing chart if any
+        if (charts.userPie) {
+          charts.userPie.destroy();
+        }
+
+        const newUsers = data.branch_stats?.new_vs_returning?.new_users || 0;
+        const returningUsers =
+          data.branch_stats?.new_vs_returning?.returning_users || 0;
+        const total = newUsers + returningUsers;
+
+        // If no data, show empty chart
+        if (total === 0) {
+          charts.userPie = new Chart(pieCtx, {
+            type: "pie",
+            data: {
+              labels: ["No Data"],
+              datasets: [
+                {
+                  data: [1],
+                  backgroundColor: ["#e2e8f0"],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false },
+              },
+            },
+          });
+          return;
+        }
+
+        // Render Pie Chart
+        charts.userPie = new Chart(pieCtx, {
+          type: "pie",
+          data: {
+            labels: ["New Users", "Returning Users"],
+            datasets: [
+              {
+                data: [newUsers, returningUsers],
+                backgroundColor: ["#3b82f6", "#10b981"],
+                borderWidth: 2,
+                borderColor: "#ffffff",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: {
+                position: "bottom",
+                labels: {
+                  padding: 15,
+                  usePointStyle: true,
+                  pointStyle: "circle",
+                  font: { size: 12 },
+                },
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    const label = context.label || "";
+                    const value = context.raw || 0;
+                    const percentage =
+                      total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    return `${label}: ${value} (${percentage}%)`;
+                  },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      function renderSocialBarChart(platformBreakdown) {
+        const barCtx = document.getElementById("socialBarChart");
+
+        if (!barCtx) {
+          console.warn("socialBarChart canvas element not found");
+          return;
+        }
+
+        // Destroy existing chart if any
+        if (charts.socialBar) {
+          charts.socialBar.destroy();
+        }
+
+        if (!platformBreakdown || platformBreakdown.length === 0) {
+          charts.socialBar = new Chart(barCtx, {
+            type: "bar",
+            data: {
+              labels: ["No Data"],
+              datasets: [
+                {
+                  data: [0],
+                  backgroundColor: ["#e2e8f0"],
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false },
+              },
+              scales: {
+                y: { display: false },
+                x: { display: false },
+              },
+            },
+          });
+          return;
+        }
+
+        const platformColors = {
+          facebook: "#1877F2",
+          instagram: "#E4405F",
+          twitter: "#1DA1F2",
+          youtube: "#FF0000",
+          whatsapp: "#25D366",
+          threads: "#000000",
+        };
+
+        const labels = platformBreakdown.map(
+          (p) => p.platform.charAt(0).toUpperCase() + p.platform.slice(1),
+        );
+        const data = platformBreakdown.map((p) => p.count);
+        const colors = platformBreakdown.map(
+          (p) => platformColors[p.platform.toLowerCase()] || "#6B7280",
+        );
+
+        charts.socialBar = new Chart(barCtx, {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Clicks",
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0,
+                borderRadius: 8,
+                barPercentage: 0.7,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return `Clicks: ${context.raw}`;
+                  },
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {
+                  precision: 0,
+                  font: { size: 11 },
+                },
+                grid: {
+                  color: "rgba(0,0,0,0.05)",
+                },
+              },
+              x: {
+                grid: {
+                  display: false,
+                },
+                ticks: {
+                  font: { size: 11 },
+                },
+              },
+            },
+          },
+        });
+      }
+
+      async function testAPIEndpoints() {
+        try {
+          console.log("Testing API endpoints...");
+
+          // Test the branch analytics endpoint directly
+          const testBranchId = selectedBranch?.id || 1; // Use branch ID 1 for testing
+          const testUrl = `${API}/analytics/branches/${testBranchId}`;
+          console.log("Testing endpoint:", testUrl);
+
+          const testRes = await fetch(testUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          console.log("Test response status:", testRes.status);
+
+          if (testRes.ok) {
+            const testData = await testRes.json();
+            console.log("Test data received:", testData);
+            return true;
+          } else {
+            console.error("Test failed:", testRes.status, testRes.statusText);
+            return false;
+          }
+        } catch (err) {
+          console.error("Test error:", err);
+          return false;
+        }
+      }
+
+      function renderBranchAnalytics(data, qrId) {
+        const mainContent = document.getElementById("mainContent");
+
+        // Get the current timeRange value BEFORE rendering the HTML
+        const currentTimeRange = LAST_ANALYTICS?.timeRange || "30days";
+
+        // Get the current date values from LAST_ANALYTICS or calculate defaults
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+
+        // Preserve custom dates if they exist in LAST_ANALYTICS
+        let startDateValue = thirtyDaysAgo.toISOString().split("T")[0];
+        let endDateValue = today.toISOString().split("T")[0];
+
+        // Try to get dates from the current data
+        if (LAST_ANALYTICS?.startDate) {
+          startDateValue = LAST_ANALYTICS.startDate;
+        }
+        if (LAST_ANALYTICS?.endDate) {
+          endDateValue = LAST_ANALYTICS.endDate;
+        }
+
+        mainContent.innerHTML = `
+        <div class="branch-filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Time Range</label>
+                    <select id="timeRange" onchange="toggleDates(); resetAndLoad();">
+                        <option value="today" ${currentTimeRange === "today" ? "selected" : ""}>Today</option>
+                        <option value="7days" ${currentTimeRange === "7days" ? "selected" : ""}>7 Days</option>
+                        <option value="30days" ${currentTimeRange === "30days" ? "selected" : ""}>30 Days</option>
+                        <option value="90days" ${currentTimeRange === "90days" ? "selected" : ""}>90 Days</option>
+                        <option value="all" ${currentTimeRange === "all" ? "selected" : ""}>All Time</option>
+                        <option value="custom" ${currentTimeRange === "custom" ? "selected" : ""}>Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Start Date</label>
+                    <input type="date" id="startDate" value="${startDateValue}" ${currentTimeRange === "custom" ? "" : "disabled"} />
+                </div>
+
+                <div class="filter-group">
+                    <label>End Date</label>
+                    <input type="date" id="endDate" value="${endDateValue}" ${currentTimeRange === "custom" ? "" : "disabled"} />
+                </div>
+
+                <div class="filter-group" style="display:flex;align-items:flex-end">
+                    <button class="btn btn-primary" style="width:100%" onclick="applyDates()">Apply Filter</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch-stats">
+            <div class="stat-card">
+                <div class="stat-label">Total Scans</div>
+                <div class="stat-value">${data.total_scans}</div>
+                <div class="stat-change">All time</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Today</div>
+                <div class="stat-value">${data.scans_today}</div>
+                <div class="stat-change">Last 24 hours</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">New Users</div>
+                <div class="stat-value">${data.branch_stats?.new_vs_returning?.new_users || 0}</div>
+                <div class="stat-change">
+                    ${
+                      data.branch_stats?.new_vs_returning?.new_percentage
+                        ? `${data.branch_stats.new_vs_returning.new_percentage}% of total`
+                        : "No data"
+                    }
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Returning Users</div>
+                <div class="stat-value">${data.branch_stats?.new_vs_returning?.returning_users || 0}</div>
+                <div class="stat-change">
+                    ${
+                      data.branch_stats?.new_vs_returning?.returning_percentage
+                        ? `${data.branch_stats.new_vs_returning.returning_percentage}% of total`
+                        : "No data"
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="user-composition-section" style="margin-bottom: 20px;">
+            <div class="chart-section">
+                <div class="section-header">
+                    <div class="section-title">Analytics Overview</div>
+                    <div class="section-subtitle">User behavior and social engagement</div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;">
+                    <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                        <div style="font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 16px; text-align: center;">User Composition</div>
+                        <div style="height: 280px; display: flex; align-items: center; justify-content: center;">
+                            <canvas id="userPieChart"></canvas>
+                        </div>
+                    </div>
+                    <div style="background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                        <div style="font-weight: 600; font-size: 14px; color: var(--text); margin-bottom: 16px; text-align: center;">Social Media Platforms</div>
+                        <div style="height: 280px;">
+                            <canvas id="socialBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch-charts">
+            <div class="chart-section">
+                <div class="section-header">
+                    <div class="section-title">Operating Systems</div>
+                </div>
+                <div id="osList">
+                    ${(() => {
+                      const osCounts = {};
+                      data.recent_scans.forEach((scan) => {
+                        const os = scan.os || "Unknown";
+                        osCounts[os] = (osCounts[os] || 0) + 1;
+                      });
+
+                      const osArray = Object.entries(osCounts)
+                        .map(([os, count]) => ({ os, count }))
+                        .sort((a, b) => b.count - a.count);
+
+                      if (osArray.length === 0) {
+                        return '<div class="no-data">No OS data</div>';
+                      }
+
+                      return osArray
+                        .map((item) => {
+                          return `
+                                <div class="device-item">
+                                    <span class="device-icon">📳</span>
+                                    <span class="device-label">${item.os}</span>
+                                    <span class="device-value">${item.count}</span>
+                                </div>
+                            `;
+                        })
+                        .join("");
+                    })()}
+                </div>
+            </div>
+        </div>
+
+        <div class="branch-charts" style="margin-top: 20px;">
+            <div class="chart-section" style="grid-column: 1 / -1;">
+                <div class="section-header">
+                    <div class="section-title">Social Media Platform Breakdown</div>
+                    <div class="section-subtitle">Click distribution by platform</div>
+                </div>
+                <div id="socialPlatformChart">
+                    <div style="text-align: center; padding: 20px; color: var(--muted);">Loading social data...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="branch-table-section">
+            <div class="table-header">
+                <div>
+                    <div class="section-title">Complete Scan History</div>
+                    <div class="section-subtitle">All scans matching your filters</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <label style="font-size:12px;color:var(--muted)">Show:</label>
+                    <select class="page-size-select" id="pageSize" onchange="changePageSize()">
+                        <option value="25" ${PAGE_SIZE === 25 ? "selected" : ""}>25</option>
+                        <option value="50" ${PAGE_SIZE === 50 ? "selected" : ""}>50</option>
+                        <option value="100" ${PAGE_SIZE === 100 ? "selected" : ""}>100</option>
+                    </select>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Device</th>
+                        <th>Browser</th>
+                        <th>OS</th>
+                    </tr>
+                </thead>
+                <tbody id="scanTable">
+                    ${
+                      data.recent_scans.length === 0
+                        ? '<tr><td colspan="5" class="no-data">No scans found for this filter</td></tr>'
+                        : data.recent_scans
+                            .map((scan) => {
+                              const date = new Date(scan.scanned_at);
+                              const time = date.toLocaleString("en-US", {
+                                month: "2-digit",
+                                day: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              });
+
+                              return `
+                                <tr>
+                                    <td>${time}</td>
+                                    <td><span class="device-badge">📱 ${scan.device_type || "Unknown"}</span></td>
+                                    <td>${scan.browser || "-"}</td>
+                                    <td>${scan.os || "-"}</td>
+                                </tr>
+                            `;
+                            })
+                            .join("")
+                    }
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <div class="pagination-info">
+                    Showing ${(data.page - 1) * data.page_size + 1}-${Math.min(data.page * data.page_size, data.filtered_scan_count)} of ${data.filtered_scan_count} scans
+                </div>
+                <div class="pagination-btns">
+                    <button class="pagination-btn" id="firstBtn" onclick="goToPage(1)" ${data.page === 1 ? "disabled" : ""}>« First</button>
+                    <button class="pagination-btn" id="prevBtn" onclick="changePage(-1)" ${data.page === 1 ? "disabled" : ""}>‹ Prev</button>
+                    <span style="margin:0 8px;font-size:13px;color:var(--muted)">
+                        Page <strong>${data.page}</strong> of <strong>${data.total_pages}</strong>
+                    </span>
+                    <button class="pagination-btn" id="nextBtn" onclick="changePage(1)" ${data.page >= data.total_pages ? "disabled" : ""}>Next ›</button>
+                    <button class="pagination-btn" id="lastBtn" onclick="goToLastPage()" ${data.page >= data.total_pages ? "disabled" : ""}>Last »</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+        // DON'T reset the dates here - they're already set in the HTML above
+
+        // Render user composition pie chart
+        setTimeout(() => {
+          renderUserPieChart(data);
+        }, 100);
+
+        // Load and render social media breakdown
+        setTimeout(() => {
+          loadSocialMediaBreakdown(
+            selectedBranch.id,
+            data.startDate,
+            data.endDate,
+          );
+        }, 150);
+      }
+
+      async function loadSocialMediaBreakdown(branchId, startDate, endDate) {
+        try {
+          const params = new URLSearchParams();
+          if (startDate) params.append("start_date", startDate);
+          if (endDate) params.append("end_date", endDate);
+
+          const url = `${API}/analytics/branches/${branchId}/social-breakdown?${params.toString()}`;
+
+          const response = await fetch(url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to load social data: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          // Render both the bar chart AND the detailed breakdown
+          renderSocialBarChart(data.platform_breakdown || []);
+          renderSocialMediaChart(data.platform_breakdown || []);
+        } catch (err) {
+          console.error("Error loading social media breakdown:", err);
+          renderSocialBarChart([]);
+          document.getElementById("socialPlatformChart").innerHTML = `
+            <div style="text-align: center; padding: 20px; color: var(--muted);">
+                No social media data available
+            </div>
+        `;
+        }
+      }
+
+      function renderSocialMediaChart(platformBreakdown) {
+        const container = document.getElementById("socialPlatformChart");
+
+        if (!platformBreakdown || platformBreakdown.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--muted);">
+                <div style="font-size: 48px; margin-bottom: 16px;"></div>
+                <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No Social Media Clicks Yet</div>
+                <div style="font-size: 14px;">Social media interactions will appear here once users start clicking.</div>
+            </div>
+        `;
+          return;
+        }
+
+        const totalClicks = platformBreakdown.reduce(
+          (sum, p) => sum + p.count,
+          0,
+        );
+        const maxCount = Math.max(...platformBreakdown.map((p) => p.count));
+
+        // Platform colors
+        const platformColors = {
+          facebook: "#1877F2",
+          instagram: "#E4405F",
+          twitter: "#1DA1F2",
+          youtube: "#FF0000",
+          whatsapp: "#25D366",
+          threads: "#000000",
+          default: "#6B7280",
+        };
+
+        const getPlatformIcon = (platform) => {
+          const icons = {
+            facebook: "👥",
+            instagram: "📸",
+            twitter: "🐦",
+            youtube: "▶️",
+            whatsapp: "💬",
+            threads: "🧵",
+          };
+          return icons[platform.toLowerCase()] || "🔗";
+        };
+
+        const html = `
+        <div style="padding: 20px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                ${platformBreakdown
+                  .map((platform) => {
+                    const percentage = (
+                      (platform.count / totalClicks) *
+                      100
+                    ).toFixed(1);
+                    const barWidth = (platform.count / maxCount) * 100;
+                    const platformKey = platform.platform.toLowerCase();
+                    const color =
+                      platformColors[platformKey] || platformColors["default"];
+                    const icon = getPlatformIcon(platform.platform);
+
+                    return `
+                        <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: transform 0.2s, box-shadow 0.2s;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 24px;">${icon}</span>
+                                    <span style="font-weight: 600; font-size: 15px; color: var(--text); text-transform: capitalize;">${platform.platform}</span>
+                                </div>
+                                <span style="font-weight: 700; font-size: 18px; color: ${color};">${platform.count}</span>
+                            </div>
+                            
+                            <div style="background: var(--bg); border-radius: 8px; height: 10px; overflow: hidden; margin-bottom: 8px;">
+                                <div style="background: ${color}; height: 100%; width: ${barWidth}%; transition: width 0.5s ease;"></div>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 13px; color: var(--muted);">${percentage}% of total</span>
+                                <span style="font-size: 12px; padding: 4px 8px; background: ${color}20; color: ${color}; border-radius: 6px; font-weight: 600;">${((platform.count / totalClicks) * 100).toFixed(0)}%</span>
+                            </div>
+                        </div>
+                    `;
+                  })
+                  .join("")}
+            </div>
+            
+            <div style="margin-top: 20px; padding: 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; text-align: center;">
+                <span style="font-size: 14px; color: var(--muted);">Total Social Media Clicks: </span>
+                <span style="font-size: 18px; font-weight: 700; color: var(--primary);">${totalClicks}</span>
+            </div>
+        </div>
+    `;
+
+        container.innerHTML = html;
+      }
+      function showLoading() {
+        document.getElementById("loadingOverlay").classList.add("show");
+      }
+
+      function hideLoading() {
+        document.getElementById("loadingOverlay").classList.remove("show");
+      }
+
+      function toggleDates() {
+        const isCustom =
+          document.getElementById("timeRange").value === "custom";
+        const startDateInput = document.getElementById("startDate");
+        const endDateInput = document.getElementById("endDate");
+
+        if (startDateInput) startDateInput.disabled = !isCustom;
+        if (endDateInput) endDateInput.disabled = !isCustom;
+
+        // Only set default dates if custom is selected AND dates are empty
+        if (isCustom) {
+          const today = new Date();
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(today.getDate() - 30);
+
+          // Only set defaults if the inputs are empty
+          if (startDateInput && !startDateInput.value) {
+            startDateInput.value = thirtyDaysAgo.toISOString().split("T")[0];
+          }
+          if (endDateInput && !endDateInput.value) {
+            endDateInput.value = today.toISOString().split("T")[0];
+          }
+        }
+      }
+
+      function resetAndLoad() {
+        CURRENT_PAGE = 1;
+
+        // Make sure date inputs are enabled/disabled based on selection
+        const timeRange = document.getElementById("timeRange");
+        if (timeRange) {
+          const isCustom = timeRange.value === "custom";
+          const startDateInput = document.getElementById("startDate");
+          const endDateInput = document.getElementById("endDate");
+
+          if (startDateInput) startDateInput.disabled = !isCustom;
+          if (endDateInput) endDateInput.disabled = !isCustom;
+        }
+
+        if (selectedBranch && selectedBranchQRId) {
+          loadBranchAnalytics();
+        } else {
+          console.error(
+            "Cannot load analytics: selectedBranch or selectedBranchQRId is null",
+          );
+        }
+      }
+
+      function applyDates() {
+        if (document.getElementById("timeRange").value === "custom") {
+          // Enable date inputs
+          document.getElementById("startDate").disabled = false;
+          document.getElementById("endDate").disabled = false;
+
+          // Set default dates if not already set
+          const today = new Date();
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(today.getDate() - 30);
+
+          const startDateInput = document.getElementById("startDate");
+          const endDateInput = document.getElementById("endDate");
+
+          if (!startDateInput.value) {
+            startDateInput.value = thirtyDaysAgo.toISOString().split("T")[0];
+          }
+          if (!endDateInput.value) {
+            endDateInput.value = today.toISOString().split("T")[0];
+          }
+
+          // Reload analytics with custom dates
+          resetAndLoad();
+        } else {
+          // For non-custom ranges, just reload
+          resetAndLoad();
+        }
+      }
+
+      function changePageSize() {
+        PAGE_SIZE = parseInt(document.getElementById("pageSize").value);
+        CURRENT_PAGE = 1;
+        if (selectedBranch && selectedBranchQRId) {
+          loadBranchAnalytics();
+        }
+      }
+
+      function changePage(delta) {
+        const newPage = CURRENT_PAGE + delta;
+        if (
+          newPage < 1 ||
+          (LAST_ANALYTICS && newPage > LAST_ANALYTICS.total_pages)
+        )
+          return;
+        CURRENT_PAGE = newPage;
+        if (selectedBranch && selectedBranchQRId) {
+          loadBranchAnalytics();
+        }
+      }
+
+      function goToPage(page) {
+        if (page < 1 || (LAST_ANALYTICS && page > LAST_ANALYTICS.total_pages))
+          return;
+        CURRENT_PAGE = page;
+        if (selectedBranch && selectedBranchQRId) {
+          loadBranchAnalytics();
+        }
+      }
+
+      function goToLastPage() {
+        if (LAST_ANALYTICS && LAST_ANALYTICS.total_pages > 0) {
+          CURRENT_PAGE = LAST_ANALYTICS.total_pages;
+          if (selectedBranch && selectedBranchQRId) {
+            loadBranchAnalytics();
+          }
+        }
+      }
+
+      function exportPDF() {
+        if (!LAST_ANALYTICS) {
+          alert("No data to export");
+          return;
+        }
+
+        window.print();
+      }
+
+      // Initialize
+      init();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,131 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hierarchy Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body { font-family: system-ui, sans-serif; background:#f9fafb; margin:0; padding:20px }
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px }
+h1 { margin:0; font-size:22px }
+button { padding:6px 12px; border-radius:6px; border:1px solid #ddd; cursor:pointer; background:white }
+.grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:20px }
+.card { background:white; padding:16px; border-radius:8px; border:1px solid #e5e7eb }
+.stat { font-size:26px; font-weight:bold; margin-top:5px }
+table { width:100%; border-collapse:collapse; margin-top:10px }
+th, td { padding:10px; border-bottom:1px solid #eee; text-align:left }
+th { background:#f3f4f6 }
+.center { text-align:center; color:#6b7280; padding:30px }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1 id="title">Loading analytics...</h1>
+  <button onclick="history.back()">← Back</button>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <div>Total QR Scans</div>
+    <div id="qrScans" class="stat">0</div>
+  </div>
+  <div class="card">
+    <div>Total Social Clicks</div>
+    <div id="socialClicks" class="stat">0</div>
+  </div>
+  <div class="card">
+    <div>New vs Returning</div>
+    <canvas id="userChart"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Breakdown</h3>
+  <div id="breakdown" class="center">Loading...</div>
+</div>
+
+<script>
+const API = "https://qr-code-2-0-22ky.onrender.com";
+const token = localStorage.getItem("token");
+
+const params = new URLSearchParams(location.search);
+const regionId = params.get("region");
+const clusterId = params.get("cluster");
+const branchId = params.get("branch");
+
+async function api(url) {
+  const res = await fetch(API + url, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.json();
+}
+
+function renderUserChart(data) {
+  new Chart(document.getElementById("userChart"), {
+    type: "doughnut",
+    data: {
+      labels: ["New Users", "Returning Users"],
+      datasets: [{
+        data: [data.new_users, data.returning_users],
+        backgroundColor: ["#3b82f6", "#10b981"]
+      }]
+    }
+  });
+}
+
+function renderTable(rows, labelKey) {
+  if (!rows || rows.length === 0) {
+    document.getElementById("breakdown").innerHTML = "No deeper breakdown available.";
+    return;
+  }
+
+  let html = `<table><tr><th>${labelKey}</th><th>QR Scans</th><th>Social Clicks</th></tr>`;
+  rows.forEach(r => {
+    html += `<tr>
+      <td>${r[labelKey]}</td>
+      <td>${r.total_qr_scans}</td>
+      <td>${r.total_social_clicks}</td>
+    </tr>`;
+  });
+  html += "</table>";
+  document.getElementById("breakdown").innerHTML = html;
+}
+
+async function loadAnalytics() {
+  if (regionId) {
+    const regions = await api("/analytics/regions?include_details=true");
+    const region = regions.find(r => r.region_id == regionId);
+    document.getElementById("title").innerText = region.region_name + " Analytics";
+    document.getElementById("qrScans").innerText = region.total_qr_scans;
+    document.getElementById("socialClicks").innerText = region.total_social_clicks;
+    renderUserChart(region.new_vs_returning);
+    renderTable(region.clusters, "cluster_name");
+
+  } else if (clusterId) {
+    const cluster = await api(`/analytics/clusters/${clusterId}`);
+    document.getElementById("title").innerText = cluster.cluster_name + " Analytics";
+    document.getElementById("qrScans").innerText = cluster.total_qr_scans;
+    document.getElementById("socialClicks").innerText = cluster.total_social_clicks;
+    renderUserChart(cluster.new_vs_returning);
+    renderTable(cluster.branches, "branch_name");
+
+  } else if (branchId) {
+    const branch = await api(`/analytics/branches/${branchId}`);
+    document.getElementById("title").innerText = branch.branch_name + " Analytics";
+    document.getElementById("qrScans").innerText = branch.total_qr_scans;
+    document.getElementById("socialClicks").innerText = branch.total_social_clicks;
+    renderUserChart(branch.new_vs_returning);
+    document.getElementById("breakdown").innerHTML = "No deeper breakdown available.";
+
+  } else {
+    document.body.innerHTML = "<h2 style='padding:40px'>Invalid analytics link</h2>";
+  }
+}
+
+loadAnalytics();
+</script>
+
+</body>
+</html> -->
