@@ -1,108 +1,143 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Godavari-Krishna Social Links</title>
-  <link rel="icon" type="image/png" href="static/social/gk.png"/>
-  <link rel="stylesheet" href="/social-links/styles.css"/>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Godavari-Krishna Social Links</title>
+    <link rel="icon" type="image/png" href="static/social/gk.png" />
+    <link rel="stylesheet" href="/social-links/styles.css" />
+  </head>
+  <body>
+    <section class="page">
+      <!-- HEADER -->
+      <header class="header">
+        <div class="logo">
+          <img src="/social-links/gk.png" alt="GK Logo" />
+        </div>
 
-  <section class="page">
-    <!-- HEADER -->
-    <header class="header">
-      <div class="logo">
-        <img src="/social-links/gk.png" alt="GK Logo">
+        <div class="header-text">
+          <h1>Godavari~Krishna Co-Operative Society Ltd.,</h1>
+          <h3>Social Media Accounts</h3>
+          <p>Discover and connect across platforms</p>
+        </div>
+      </header>
+
+      <!-- CARDS -->
+      <div class="cards">
+        <a
+          class="card"
+          href="https://www.facebook.com/share/1CGWvx8Zwo/"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-platform="facebook"
+        >
+          <div class="icon facebook">
+            <img src="/social-links/facebook.png" alt="Facebook" />
+          </div>
+          <h2>Facebook</h2>
+          <p>Connect with friends and family</p>
+        </a>
+
+        <a
+          class="card"
+          href="https://www.instagram.com/godavarikrishnasociety?igsh=NDA0cDdnejU1YWM2"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-platform="instagram"
+        >
+          <div class="icon instagram">
+            <img src="/social-links/instagram.png" alt="Instagram" />
+          </div>
+          <h2>Instagram</h2>
+          <p>Share photos and stories</p>
+        </a>
+
+        <a
+          class="card"
+          href="https://youtube.com/@godavarikrishnaco-opsociet6591?si=lAsb2CVDz64m_fbc"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-platform="youtube"
+        >
+          <div class="icon youtube">
+            <img src="/social-links/youtube.png" alt="YouTube" />
+          </div>
+          <h2>YouTube</h2>
+          <p>Watch and create videos</p>
+        </a>
+
+        <a
+          class="card"
+          href="https://www.threads.com/@godavarikrishnasociety"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-platform="threads"
+        >
+          <div class="icon threads">
+            <img src="/social-links/threads.png" alt="Threads" />
+          </div>
+          <h2>Threads</h2>
+        </a>
+
+        <a
+          class="card"
+          href="https://x.com/GodavariCo"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-platform="twitter"
+        >
+          <div class="icon twitter">
+            <img src="/social-links/twitter.png" alt="Twitter" />
+          </div>
+          <h2>Twitter</h2>
+        </a>
+
+        <a
+          class="card"
+          href="https://whatsapp.com/channel/0029Vb70MKi8F2pCSvo2u80S"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-platform="whatsapp"
+        >
+          <div class="icon whatsapp">
+            <img src="/social-links/whatsapp.png" alt="WhatsApp" />
+          </div>
+          <h2>WhatsApp</h2>
+        </a>
       </div>
 
-      <div class="header-text">
-        <h1>Godavari~Krishna Co-Operative Society Ltd.,</h1>
-        <h3>Social Media Accounts</h3>
-        <p>Discover and connect across platforms</p>
-      </div>
-    </header>
+      <footer class="footer">
+        &copy; 2024 Godavari Krishna Co-operative Society Limited - All Rights
+        Reserved.
+      </footer>
+    </section>
 
-    <!-- CARDS -->
-    <div class="cards">
-      <a class="card" href="https://www.facebook.com/share/1CGWvx8Zwo/" target="_blank" rel="noopener noreferrer" data-platform="facebook">
-        <div class="icon facebook">
-          <img src="/social-links/facebook.png" alt="Facebook">
-        </div>
-        <h2>Facebook</h2>
-        <p>Connect with friends and family</p>
-      </a>
+    <script>
+      const API = "https://godavarikrishna-qr.onrender.com";
+      const urlParams = new URLSearchParams(window.location.search);
+      const branchCode = urlParams.get("branch");
 
-      <a class="card" href="https://www.instagram.com/godavarikrishnasociety?igsh=NDA0cDdnejU1YWM2" target="_blank" rel="noopener noreferrer" data-platform="instagram">
-        <div class="icon instagram">
-          <img src="/social-links/instagram.png" alt="Instagram">
-        </div>
-        <h2>Instagram</h2>
-        <p>Share photos and stories</p>
-      </a>
+      function getSessionId() {
+        const match = document.cookie.match(/qr_session=([^;]+)/);
+        return match ? match[1] : null;
+      }
 
-      <a class="card" href="https://youtube.com/@godavarikrishnaco-opsociet6591?si=lAsb2CVDz64m_fbc" target="_blank" rel="noopener noreferrer" data-platform="youtube">
-        <div class="icon youtube">
-          <img src="/social-links/youtube.png" alt="YouTube">
-        </div>
-        <h2>YouTube</h2>
-        <p>Watch and create videos</p>
-      </a>
-
-      <a class="card" href="https://www.threads.com/@godavarikrishnasociety" target="_blank" rel="noopener noreferrer" data-platform="threads">
-        <div class="icon threads">
-          <img src="/social-links/threads.png" alt="Threads">
-        </div>
-        <h2>Threads</h2>
-      </a>
-
-      <a class="card" href="https://x.com/GodavariCo" target="_blank" rel="noopener noreferrer" data-platform="twitter">
-        <div class="icon twitter">
-          <img src="/social-links/twitter.png" alt="Twitter">
-        </div>
-        <h2>Twitter</h2>
-      </a>
-
-      <a class="card" href="https://whatsapp.com/channel/0029Vb70MKi8F2pCSvo2u80S" target="_blank" rel="noopener noreferrer" data-platform="whatsapp">
-        <div class="icon whatsapp">
-          <img src="/social-links/whatsapp.png" alt="WhatsApp">
-        </div>
-        <h2>WhatsApp</h2>
-      </a>
-    </div>
-    
-    <footer class="footer">
-      &copy; 2024 Godavari Krishna Co-operative Society Limited - All Rights Reserved.
-    </footer>
-  </section>
-
-  <script>
-const API = 'https://qr-code-2-0-22ky.onrender.com';
-const urlParams = new URLSearchParams(window.location.search);
-const branchCode = urlParams.get('branch');
-
-function getSessionId() {
-  const match = document.cookie.match(/qr_session=([^;]+)/);
-  return match ? match[1] : null;
-}
-
-document.querySelectorAll('.card').forEach(card => {
-  card.addEventListener('click', async () => {
-    try {
-      await fetch(`${API}/api/social-click`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platform: card.dataset.platform,
-          branch_code: branchCode,
-          session_id: getSessionId()
-        })
+      document.querySelectorAll(".card").forEach((card) => {
+        card.addEventListener("click", async () => {
+          try {
+            await fetch(`${API}/api/social-click`, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                platform: card.dataset.platform,
+                branch_code: branchCode,
+                session_id: getSessionId(),
+              }),
+            });
+          } catch (e) {}
+        });
       });
-    } catch (e) {}
-  });
-});
-</script>
-
-</body>
+    </script>
+  </body>
 </html>

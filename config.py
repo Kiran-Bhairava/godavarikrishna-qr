@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
     
     # Server
-    BASE_URL: str = "https://qr-code-2-0-22ky.onrender.com"
+    BASE_URL: str = "https://godavarikrishna-qr.onrender.com"
     ENVIRONMENT: str = "production"  # development, staging, production
     
     # Logging
