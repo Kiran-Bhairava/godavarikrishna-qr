@@ -1,19 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import HTMLResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+import time
 import logging
 import uuid
+from typing import Optional
 
-from database import get_db
-from models import QRCode, QRScan, SocialClick
+from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
+from fastapi.responses import RedirectResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from database import get_db, async_session_maker
+from models import QRCode, QRScan
 from utils import parse_device_info
-from utils_session import is_new_user_atomic  # ✅ NEW: Atomic session deduplication
-from config import settings
+from utils_session import is_new_user_atomic  # ✅ Atomic session deduplication — UNCHANGED
 
 router = APIRouter(tags=["Public"])
 logger = logging.getLogger(__name__)
-
 
 
 # ============================================
@@ -25,86 +26,153 @@ logger = logging.getLogger(__name__)
 # ============================================
 
 
+# ============================================
+# ✅ NEW: In-memory QR code cache
+# ============================================
+# QR configs rarely change, so we avoid hitting Postgres on every single
+# scan just to resolve a static (code -> target_url/branch_id) mapping.
+# TTL is intentionally short so deactivations/edits still propagate quickly.
+# ============================================
+_QR_CACHE_TTL_SECONDS = 30
+_qr_cache: dict[str, tuple[int, str, bool, Optional[int], float]] = {}
+# code -> (qr_id, target_url, is_active, branch_id, cached_at)
+
+
+def invalidate_qr_cache(code: Optional[str] = None) -> None:
+    """
+    Call this from your QR create/update/delete endpoints (routes/qr.py)
+    if you want changes to take effect immediately instead of waiting
+    up to _QR_CACHE_TTL_SECONDS. Safe to call with no args to clear everything.
+    """
+    if code is None:
+        _qr_cache.clear()
+    else:
+        _qr_cache.pop(code, None)
+
+
+async def _get_qr_data(code: str, db: AsyncSession):
+    cached = _qr_cache.get(code)
+    if cached and (time.monotonic() - cached[4]) < _QR_CACHE_TTL_SECONDS:
+        qr_id, target_url, is_active, branch_id, _ = cached
+        return qr_id, target_url, is_active, branch_id
+
+    result = await db.execute(
+        select(QRCode.id, QRCode.target_url, QRCode.is_active, QRCode.branch_id)
+        .where(QRCode.code == code)
+    )
+    row = result.one_or_none()
+    if not row:
+        return None
+
+    qr_id, target_url, is_active, branch_id = row
+    _qr_cache[code] = (qr_id, target_url, is_active, branch_id, time.monotonic())
+    return qr_id, target_url, is_active, branch_id
+
+
+# ============================================
+# ✅ NEW: Background scan logging
+# ============================================
+# Runs AFTER the redirect response has already been sent to the user,
+# so scan logging latency never affects redirect speed. Uses its own
+# fresh DB session since the request-scoped session is closed by the
+# time BackgroundTasks runs.
+# ============================================
+async def _log_scan_background(
+    qr_id: int,
+    branch_id: Optional[int],
+    session_id: str,
+    user_agent: str,
+    ip_address: Optional[str],
+):
+    try:
+        async with async_session_maker() as db:
+            # ✅ ATOMIC check — unchanged logic, still the single source of
+            # truth for new-vs-returning, still backed by the DB primary
+            # key constraint on session_first_seen.
+            is_new = await is_new_user_atomic(
+                db,
+                session_id,
+                action_type="qr_scan",
+                branch_id=branch_id,
+                qr_code_id=qr_id,
+            )
+
+            device_info = parse_device_info(user_agent)
+
+            scan = QRScan(
+                qr_code_id=qr_id,
+                device_type=device_info["device_type"],
+                device_name=device_info["device_name"],
+                browser=device_info["browser"],
+                os=device_info["os"],
+                ip_address=ip_address,
+                country=None,
+                city=None,
+                region=None,
+                session_id=session_id,
+                is_new_user=is_new,
+                user_agent=user_agent,
+            )
+
+            db.add(scan)
+            await db.commit()
+
+            logger.info(
+                f"✅ Scan recorded for QR {qr_id} (Session: {session_id[:8]}..., new={is_new})"
+            )
+    except Exception as e:
+        # Never let a logging failure surface to the user — the redirect
+        # already happened. Just log it for visibility.
+        logger.error(f"❌ Background scan log error: {e}", exc_info=True)
+
 
 @router.get("/r/{code}")
-async def redirect_qr(code: str, request: Request, db: AsyncSession = Depends(get_db)):
+async def redirect_qr(
+    code: str,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
     """
     QR code redirect endpoint.
-    Session is generated server-side and injected to prevent phantom users.
+
+    ✅ OPTIMIZED: redirects immediately via a server-side 302 instead of
+    serving an HTML page that waits on client-side JS + sendBeacon + a
+    100ms artificial delay. Scan logging happens in the background after
+    the response is sent, so the user is never waiting on a DB write.
     """
     try:
-        result = await db.execute(
-            select(QRCode.id, QRCode.target_url, QRCode.is_active, QRCode.code)
-            .where(QRCode.code == code)
-        )
-        qr_data = result.one_or_none()
+        qr_data = await _get_qr_data(code, db)
 
         if not qr_data:
             raise HTTPException(status_code=404, detail="QR code not found")
 
-        qr_id, target_url, is_active, qr_code = qr_data
+        qr_id, target_url, is_active, branch_id = qr_data
 
         if not is_active:
             raise HTTPException(status_code=410, detail="QR code deactivated")
 
         separator = "&" if "?" in target_url else "?"
-        redirect_url = f"{target_url}{separator}branch={qr_code}"
+        redirect_url = f"{target_url}{separator}branch={code}"
 
-        # ✅ Generate session BEFORE HTML (fixes phantom users)
+        # ✅ Session generated/reused exactly as before
         session_id = request.cookies.get("qr_session") or str(uuid.uuid4())
 
-        # ✅ HTML with guaranteed scan logging
-        html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Redirecting...</title>
-</head>
-<body>
-<script>
-const QR_ID = {qr_id};
-const TARGET_URL = "{redirect_url}";
-const API = "{settings.BASE_URL}";
-const SESSION_ID = "{session_id}";
+        user_agent = request.headers.get("user-agent", "")
+        ip_address = request.client.host if request.client else None
 
-function sendLog() {{
-    const payload = {{
-        qr_code_id: QR_ID,
-        user_agent: navigator.userAgent,
-        session_id: SESSION_ID
-    }};
+        # ✅ Fire-and-forget scan logging — doesn't block the redirect
+        background_tasks.add_task(
+            _log_scan_background,
+            qr_id,
+            branch_id,
+            session_id,
+            user_agent,
+            ip_address,
+        )
 
-    // Use sendBeacon for guaranteed delivery
-    const sent = navigator.sendBeacon(
-        `${{API}}/api/scan-log`,
-        new Blob([JSON.stringify(payload)], {{ type: 'application/json' }})
-    );
+        response = RedirectResponse(url=redirect_url, status_code=302)
 
-    if (!sent) {{
-        // Fallback to fetch with keepalive
-        fetch(`${{API}}/api/scan-log`, {{
-            method: "POST",
-            headers: {{ "Content-Type": "application/json" }},
-            body: JSON.stringify(payload),
-            keepalive: true
-        }}).catch(() => {{}});
-    }}
-}}
-
-// ✅ ALWAYS log immediately (guarantees scan is recorded)
-sendLog();
-
-// ✅ Small delay to ensure sendBeacon fires (Safari/iOS fix)
-setTimeout(() => {{
-    window.location.replace(TARGET_URL);
-}}, 100);
-</script>
-</body>
-</html>"""
-
-        response = HTMLResponse(content=html_content)
-
-        # Set persistent cookie
         response.set_cookie(
             key="qr_session",
             value=session_id,
@@ -112,20 +180,29 @@ setTimeout(() => {{
             httponly=False,
             samesite="None",
             secure=True,
-            path="/"
+            path="/",
         )
 
         return response
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Redirect error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal error")
 
 
+# ============================================
+# LEGACY: kept for backward compatibility
+# ============================================
+# The redirect page no longer calls this (scan logging is now handled
+# server-side via BackgroundTasks in /r/{code} above). Left in place
+# unchanged in case any other client still posts here directly.
+# ============================================
 @router.post("/api/scan-log")
 async def log_scan(request: Request, db: AsyncSession = Depends(get_db)):
     """
-    Log QR code scan.
+    Log QR code scan. (Legacy endpoint — see note above.)
     """
     try:
         data = await request.json()
@@ -137,7 +214,6 @@ async def log_scan(request: Request, db: AsyncSession = Depends(get_db)):
         ip_address = request.client.host if request.client else None
         cookie_session = request.cookies.get("qr_session")
 
-        # Session priority: cookie > frontend > new (matches routes/social.py)
         if cookie_session:
             session_id = cookie_session
         elif frontend_session:
@@ -146,8 +222,6 @@ async def log_scan(request: Request, db: AsyncSession = Depends(get_db)):
             session_id = str(uuid.uuid4())
             logger.warning(f"No session for QR {qr_code_id}, created fallback")
 
-        # Resolve the branch this QR code belongs to, so new-vs-returning can be
-        # scoped per branch instead of globally across the whole system.
         branch_id = None
         if qr_code_id is not None:
             branch_result = await db.execute(
@@ -155,17 +229,14 @@ async def log_scan(request: Request, db: AsyncSession = Depends(get_db)):
             )
             branch_id = branch_result.scalar_one_or_none()
 
-        # Create scan record
         device_info = parse_device_info(user_agent)
-        
-        # ✅ ATOMIC check: Use database constraint to prevent phantom users,
-        # scoped to (session, branch) so it's "new to this branch", not "new ever"
+
         is_new = await is_new_user_atomic(
-            db, 
-            session_id, 
+            db,
+            session_id,
             action_type="qr_scan",
             branch_id=branch_id,
-            qr_code_id=qr_code_id
+            qr_code_id=qr_code_id,
         )
 
         scan = QRScan(
@@ -180,7 +251,7 @@ async def log_scan(request: Request, db: AsyncSession = Depends(get_db)):
             region=None,
             session_id=session_id,
             is_new_user=is_new,
-            user_agent=user_agent
+            user_agent=user_agent,
         )
 
         db.add(scan)
@@ -188,11 +259,11 @@ async def log_scan(request: Request, db: AsyncSession = Depends(get_db)):
         await db.refresh(scan)
 
         logger.info(f"✅ Scan #{scan.id} recorded for QR {qr_code_id} (Session: {session_id[:8]}...)")
-        
+
         return {
             "status": "success",
             "scan_id": scan.id,
-            "is_new_user": is_new
+            "is_new_user": is_new,
         }
 
     except Exception as e:
