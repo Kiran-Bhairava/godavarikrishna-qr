@@ -435,7 +435,7 @@ async def log_scan(request: Request, db: AsyncSession = Depends(get_db)):
             logger.warning(f"No session for QR {qr_code_id}, created fallback")
 
         # ✅ If this is a GPS update, try to update existing scan
-        if is_gps_update and latitude and longitude:
+        if is_gps_update and latitude is not None and longitude is not None:
             # Find most recent scan from this session for this QR
             from datetime import datetime, timedelta
             time_threshold = datetime.utcnow() - timedelta(minutes=5)
