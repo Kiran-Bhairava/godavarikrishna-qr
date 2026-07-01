@@ -1953,21 +1953,18 @@
         if (!platformBreakdown || platformBreakdown.length === 0) {
           container.innerHTML = `
             <div style="text-align: center; padding: 40px; color: var(--muted);">
-                <div style="font-size: 48px; margin-bottom: 16px;"></div>
+                <div style="font-size: 48px; margin-bottom: 16px;">📱</div>
                 <div style="font-size: 16px; font-weight: 500; margin-bottom: 8px;">No Social Media Clicks Yet</div>
                 <div style="font-size: 14px;">Social media interactions will appear here once users start clicking.</div>
             </div>
-        `;
+          `;
           return;
         }
 
-        const totalClicks = platformBreakdown.reduce(
-          (sum, p) => sum + p.count,
-          0,
-        );
+        const totalClicks = platformBreakdown.reduce((sum, p) => sum + p.count, 0);
         const maxCount = Math.max(...platformBreakdown.map((p) => p.count));
 
-        // Platform colors
+        // Platform brand colors
         const platformColors = {
           facebook: "#1877F2",
           instagram: "#E4405F",
@@ -1978,63 +1975,69 @@
           default: "#6B7280",
         };
 
-        const getPlatformIcon = (platform) => {
-          const icons = {
-            facebook: "👥",
-            instagram: "📸",
-            twitter: "🐦",
-            youtube: "▶️",
-            whatsapp: "💬",
-            threads: "🧵",
-          };
-          return icons[platform.toLowerCase()] || "🔗";
+        // ✅ Real brand logos — same assets already used on your social links page
+        const platformLogos = {
+          facebook: "social/facebook.png",
+          instagram: "social/instagram.png",
+          twitter: "social/twitter.png",
+          youtube: "social/youtube.png",
+          whatsapp: "social/whatsapp.png",
+          threads: "social/threads.png",
         };
 
-        const html = `
-        <div style="padding: 20px;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
-                ${platformBreakdown
-                  .map((platform) => {
-                    const percentage = (
-                      (platform.count / totalClicks) *
-                      100
-                    ).toFixed(1);
-                    const barWidth = (platform.count / maxCount) * 100;
-                    const platformKey = platform.platform.toLowerCase();
-                    const color =
-                      platformColors[platformKey] || platformColors["default"];
-                    const icon = getPlatformIcon(platform.platform);
+        // Sort by count descending so the highest performer leads visually
+        const sorted = [...platformBreakdown].sort((a, b) => b.count - a.count);
 
-                    return `
-                        <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; transition: transform 0.2s, box-shadow 0.2s;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                                <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-size: 24px;">${icon}</span>
-                                    <span style="font-weight: 600; font-size: 15px; color: var(--text); text-transform: capitalize;">${platform.platform}</span>
-                                </div>
-                                <span style="font-weight: 700; font-size: 18px; color: ${color};">${platform.count}</span>
-                            </div>
-                            
-                            <div style="background: var(--bg); border-radius: 8px; height: 10px; overflow: hidden; margin-bottom: 8px;">
-                                <div style="background: ${color}; height: 100%; width: ${barWidth}%; transition: width 0.5s ease;"></div>
-                            </div>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 13px; color: var(--muted);">${percentage}% of total</span>
-                                <span style="font-size: 12px; padding: 4px 8px; background: ${color}20; color: ${color}; border-radius: 6px; font-weight: 600;">${((platform.count / totalClicks) * 100).toFixed(0)}%</span>
-                            </div>
-                        </div>
-                    `;
-                  })
-                  .join("")}
-            </div>
-            
-            <div style="margin-top: 20px; padding: 16px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; text-align: center;">
-                <span style="font-size: 14px; color: var(--muted);">Total Social Media Clicks: </span>
-                <span style="font-size: 18px; font-weight: 700; color: var(--primary);">${totalClicks}</span>
-            </div>
-        </div>
-    `;
+        const html = `
+          <div style="padding: 20px;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; align-items: stretch;">
+                  ${sorted
+                    .map((platform) => {
+                      const percentage = ((platform.count / totalClicks) * 100).toFixed(1);
+                      const barWidth = (platform.count / maxCount) * 100;
+                      const platformKey = platform.platform.toLowerCase();
+                      const color = platformColors[platformKey] || platformColors["default"];
+                      const logo = platformLogos[platformKey];
+
+                      return `
+                          <div style="display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px; transition: transform 0.2s ease, box-shadow 0.2s ease;"
+                              onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.08)';"
+                              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+
+                              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                                  <div style="display: flex; align-items: center; gap: 10px;">
+                                      <div style="width: 38px; height: 38px; border-radius: 10px; background: ${color}18; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                          ${
+                                            logo
+                                              ? `<img src="${logo}" alt="${platform.platform}" style="width: 22px; height: 22px; object-fit: contain; border-radius: 4px;" onerror="this.parentElement.innerHTML='<span style=\\'font-size:16px;color:${color}\\'>🔗</span>';" />`
+                                              : `<span style="font-size: 16px; color: ${color};">🔗</span>`
+                                          }
+                                      </div>
+                                      <span style="font-weight: 600; font-size: 14px; color: var(--text); text-transform: capitalize;">${platform.platform}</span>
+                                  </div>
+                                  <span style="font-weight: 700; font-size: 20px; color: ${color};">${platform.count}</span>
+                              </div>
+
+                              <div style="background: var(--bg); border-radius: 8px; height: 8px; overflow: hidden; margin-bottom: 10px;">
+                                  <div style="background: ${color}; height: 100%; width: ${barWidth}%; border-radius: 8px; transition: width 0.6s ease;"></div>
+                              </div>
+
+                              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: auto;">
+                                  <span style="font-size: 12px; color: var(--muted);">${percentage}% of total</span>
+                                  <span style="font-size: 11px; padding: 3px 8px; background: ${color}15; color: ${color}; border-radius: 999px; font-weight: 700;">${percentage}%</span>
+                              </div>
+                          </div>
+                      `;
+                    })
+                    .join("")}
+              </div>
+
+              <div style="margin-top: 20px; padding: 16px 20px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                  <span style="font-size: 14px; color: var(--muted);">Total Social Media Clicks</span>
+                  <span style="font-size: 20px; font-weight: 700; color: var(--primary);">${totalClicks}</span>
+              </div>
+          </div>
+        `;
 
         container.innerHTML = html;
       }
