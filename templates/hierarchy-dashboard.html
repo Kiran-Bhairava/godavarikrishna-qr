@@ -1777,43 +1777,6 @@
             </div>
         </div>
 
-        <div class="branch-charts">
-            <div class="chart-section">
-                <div class="section-header">
-                    <div class="section-title">Operating Systems</div>
-                </div>
-                <div id="osList">
-                    ${(() => {
-                      const osCounts = {};
-                      data.recent_scans.forEach((scan) => {
-                        const os = scan.os || "Unknown";
-                        osCounts[os] = (osCounts[os] || 0) + 1;
-                      });
-
-                      const osArray = Object.entries(osCounts)
-                        .map(([os, count]) => ({ os, count }))
-                        .sort((a, b) => b.count - a.count);
-
-                      if (osArray.length === 0) {
-                        return '<div class="no-data">No OS data</div>';
-                      }
-
-                      return osArray
-                        .map((item) => {
-                          return `
-                                <div class="device-item">
-                                    <span class="device-icon">📳</span>
-                                    <span class="device-label">${item.os}</span>
-                                    <span class="device-value">${item.count}</span>
-                                </div>
-                            `;
-                        })
-                        .join("");
-                    })()}
-                </div>
-            </div>
-        </div>
-
         <div class="branch-charts" style="margin-top: 20px;">
             <div class="chart-section" style="grid-column: 1 / -1;">
                 <div class="section-header">
