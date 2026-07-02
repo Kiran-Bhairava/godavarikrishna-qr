@@ -722,7 +722,16 @@
           branches = await api("/api/branches");
 
           populateRegionFilter();
-          await loadHierarchyAnalytics();
+
+          // Restore whichever region/cluster/branch was selected before
+          // the page was refreshed (or reload via a shared link).
+          const { branchId } = restoreStateFromURL();
+
+          if (branchId) {
+            await onBranchChange();
+          } else {
+            await loadHierarchyAnalytics();
+          }
         } catch (e) {
           console.error("Init failed:", e);
         } finally {
@@ -737,6 +746,68 @@
           regions
             .map((r) => `<option value="${r.id}">${r.name}</option>`)
             .join("");
+      }
+
+      // Write the current region/cluster/branch selection into the URL
+      // so a page refresh (or a shared link) lands back on the same view.
+      function syncURL() {
+        const regionId = document.getElementById("regionFilter").value;
+        const clusterId = document.getElementById("clusterFilter").value;
+        const branchId = document.getElementById("branchFilter").value;
+
+        const params = new URLSearchParams();
+        if (regionId) params.set("region", regionId);
+        if (clusterId) params.set("cluster", clusterId);
+        if (branchId) params.set("branch", branchId);
+
+        const query = params.toString();
+        const newURL = query
+          ? `${window.location.pathname}?${query}`
+          : window.location.pathname;
+
+        window.history.replaceState({}, "", newURL);
+      }
+
+      // Read region/cluster/branch out of the URL (if present) and
+      // pre-select the dropdowns to match, cascading the options
+      // exactly like a user clicking through region -> cluster -> branch.
+      function restoreStateFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        const regionId = params.get("region") || "";
+        const clusterId = params.get("cluster") || "";
+        const branchId = params.get("branch") || "";
+
+        if (regionId) {
+          document.getElementById("regionFilter").value = regionId;
+
+          const regionClusters = clusters.filter(
+            (c) => c.region_id == regionId,
+          );
+          document.getElementById("clusterFilter").innerHTML =
+            '<option value="">All Clusters</option>' +
+            regionClusters
+              .map((c) => `<option value="${c.id}">${c.name}</option>`)
+              .join("");
+        }
+
+        if (clusterId) {
+          document.getElementById("clusterFilter").value = clusterId;
+
+          const clusterBranches = branches.filter(
+            (b) => b.cluster_id == clusterId,
+          );
+          document.getElementById("branchFilter").innerHTML =
+            '<option value="">All Branches</option>' +
+            clusterBranches
+              .map((b) => `<option value="${b.id}">${b.name}</option>`)
+              .join("");
+        }
+
+        if (branchId) {
+          document.getElementById("branchFilter").value = branchId;
+        }
+
+        return { regionId, clusterId, branchId };
       }
 
       function onRegionChange() {
@@ -764,6 +835,7 @@
         selectedBranchQRId = null;
         document.getElementById("exportBtn").style.display = "none";
 
+        syncURL();
         loadHierarchyAnalytics();
       }
 
@@ -789,6 +861,7 @@
         selectedBranchQRId = null;
         document.getElementById("exportBtn").style.display = "none";
 
+        syncURL();
         loadHierarchyAnalytics();
       }
 
@@ -823,6 +896,8 @@
           // Get QR ID for this specific branch
           await getBranchQRId();
 
+          syncURL();
+
           // Load branch analytics
           loadBranchAnalytics();
         } else {
@@ -835,6 +910,7 @@
             "ENTERPRISE PERFORMANCE";
           document.getElementById("exportBtn").style.display = "none";
 
+          syncURL();
           loadHierarchyAnalytics();
         }
       }
