@@ -106,6 +106,33 @@
         </a>
       </div>
 
+      <a
+      class="website-btn"
+        href="https://www.godavarikrishna.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="website-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 0 20 15.3 15.3 0 0 1 0-20z"/>
+          </svg>
+        </span>
+
+        <span class="website-text">
+          <span class="website-title">Visit Our Website</span>
+          <span class="website-subtitle">For more details, tap here</span>
+        </span>
+
+        <span class="website-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0a95d8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </span>
+      </a>
+
       <footer class="footer">
         &copy; 2024 Godavari Krishna Co-operative Society Limited - All Rights
         Reserved.
@@ -113,7 +140,7 @@
     </section>
 
     <script>
-      const API = "https://godavarikrishna-qr.onrender.com";
+      const API = window.location.origin;
       const urlParams = new URLSearchParams(window.location.search);
       const branchCode = urlParams.get("branch");
 
